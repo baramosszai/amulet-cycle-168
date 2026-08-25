@@ -1,3 +1,81 @@
+// =============================================
+// SANITY CONFIGURATION
+// =============================================
+
+const SANITY_PROJECT_ID = '5ik5680s';
+const SANITY_DATASET = 'production';
+const SANITY_API_VERSION = '2026-08-25';
+
+const SANITY_BASE_URL =
+  `https://<projectId>.apicdn.sanity.io/v<date>/data/query/<dataset>`;
+
+  // =============================================
+// LOAD AMULETS FROM SANITY
+// =============================================
+
+async function fetchAmulets() {
+
+  const query = `
+    *[
+      _type == "amulet" &&
+      showOnWebsite == true
+    ]
+    | order(_createdAt desc)
+    {
+      _id,
+      inventoryId,
+      name,
+      "slug": slug.current,
+      category,
+      monkMaster,
+      temple,
+      year,
+      material,
+      widthMm,
+      heightMm,
+      story,
+      description,
+      priceThb,
+      showOnWebsite,
+      featured,
+      newArrival,
+      status,
+
+      "images": images[]{
+        "url": asset->url,
+        imageType,
+        caption
+      }
+    }
+  `;
+
+  const url =
+    `${SANITY_BASE_URL}?query=${encodeURIComponent(query)}`;
+
+  try {
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        `Sanity request failed: ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+
+    console.log('Amulets loaded from Sanity:', data.result);
+
+    return data.result;
+
+  } catch (error) {
+
+    console.error('Could not load Sanity inventory:', error);
+
+    return [];
+  }
+}
+
 const inventory = [
  {id:"AC168-0001",name:"Somdej — Collector Placeholder",temple:"Bangkok · Wat Example",category:"Buddha",era:"25XX BE",material:"Sacred powder",condition:"Excellent",price:"฿35,000",status:"Available",story:"Three Generations in Bangkok"},
  {id:"AC168-0002",name:"Meditation Buddha — Placeholder",temple:"Bangkok · Temple Example",category:"Buddha",era:"Vintage",material:"Bronze",condition:"Very good",price:"฿28,000",status:"Available",story:"A Quiet Journey"},
@@ -48,3 +126,11 @@ function subscribe(e){e.preventDefault();alert("Thank you. Newsletter connection
 function sendInquiry(e){e.preventDefault();document.getElementById("form-message").textContent="Thank you. The form is currently in demo mode; connect it to your preferred email/form service before launch.";}
 document.querySelector(".menu-toggle")?.addEventListener("click",()=>document.querySelector(".nav")?.classList.toggle("open"));
 renderFeatured(); renderInventory(); renderProduct();
+
+fetchAmulets().then((amulets) => {
+
+  console.log('SANITY TEST RESULT:');
+
+  console.log(amulets);
+
+});
