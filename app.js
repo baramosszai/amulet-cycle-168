@@ -255,10 +255,10 @@ function renderProductDetail(container, amulet) {
       <div class="specs">
         ${createSpec(t('product.temple'), temple)}${createSpec(t('product.monk'), monkMaster)}${createSpec(t('product.province'), province)}${createSpec(t('product.category'), category)}
         ${createSpec(t('product.year'), amulet.year)}${createSpec(t('product.material'), material)}
-        ${createSpec(t('product.width'), amulet.widthMm !== undefined ? `${amulet.widthMm} mm` : '')}
-        ${createSpec(t('product.height'), amulet.heightMm !== undefined ? `${amulet.heightMm} mm` : '')}
-        ${createSpec(t('product.thickness'), amulet.thicknessMm !== undefined ? `${amulet.thicknessMm} mm` : '')}
-        ${createSpec(t('product.weight'), amulet.weightG !== undefined ? `${amulet.weightG} g` : '')}
+        ${createSpec(t('product.width'), amulet.widthMm != null ? `${amulet.widthMm} mm` : '')}
+        ${createSpec(t('product.height'), amulet.heightMm != null ? `${amulet.heightMm} mm` : '')}
+        ${createSpec(t('product.thickness'), amulet.thicknessMm != null ? `${amulet.thicknessMm} mm` : '')}
+        ${createSpec(t('product.weight'), amulet.weightG != null ? `${amulet.weightG} g` : '')}
         ${createSpec(t('product.condition'), condition)}${createSpec(t('product.status'), getStatusLabel(amulet.status))}
       </div>
       ${story ? `<section class="product-story"><p class="eyebrow">${escapeHtml(t('product.story'))}</p><p>${escapeHtml(story)}</p></section>` : ''}
