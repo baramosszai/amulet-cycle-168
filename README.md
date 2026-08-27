@@ -9,7 +9,7 @@ Production-oriented, multilingual static catalogue for GitHub Pages. Inventory, 
 - `product.html?id=AC168-0001` — reusable dynamic listing page
 - `story.html` — stories sourced from published inventory records
 - `about.html` — collector-house positioning and publishing principles
-- `contact.html` — verified WhatsApp, WeChat, telephone, address, and WhatsApp inquiry helper
+- `contact.html` — equal-weight WhatsApp, WeChat, telephone, optional email/LINE, address, and inquiry tools
 - `policies.html` — shipping, returns, authenticity, privacy, and website terms
 - `404.html` — GitHub Pages fallback
 
