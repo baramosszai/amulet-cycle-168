@@ -1,22 +1,34 @@
-# Amulet Cycle 168 — V1
+# Amulet Cycle 168 public website
 
-A static, responsive starter website for a Bangkok-based Buddhist amulet store serving international collectors.
+Production-oriented, multilingual static catalogue for GitHub Pages. Inventory, stories, product details, and product images are loaded from the Sanity `production` dataset.
 
-## Pages
-- `index.html` — homepage/directory
-- `inventory.html` — searchable/filterable inventory
-- `product.html?id=AC168-0001` — individual listing template
-- `story.html` — stories
-- `contact.html` — contact/inquiry page
+## Public pages
 
-## Before launch
-1. Replace placeholder inventory in `app.js` with verified listings.
-2. Replace the placeholder visual blocks with real product photography.
-3. Replace placeholder contact information.
-4. Connect the inquiry form to an email/form service.
-5. Add verified shipping, returns, terms and privacy pages.
-6. Test on mobile.
-7. Publish via GitHub Pages and connect `www.amuletcycle168.com`.
+- `index.html` — brand homepage and featured inventory
+- `inventory.html` — searchable, filterable Sanity inventory
+- `product.html?id=AC168-0001` — reusable dynamic listing page
+- `story.html` — stories sourced from published inventory records
+- `about.html` — collector-house positioning and publishing principles
+- `contact.html` — verified WhatsApp, WeChat, telephone, address, and WhatsApp inquiry helper
+- `policies.html` — shipping, returns, authenticity, privacy, and website terms
+- `404.html` — GitHub Pages fallback
 
-## Important
-The website currently uses placeholder product facts and demo forms. Do not publish those as factual claims about authenticity, provenance, temple attribution, or certification until verified.
+## Publishing an inventory item
+
+1. Create the item in Sanity Studio.
+2. Assign a permanent `AC168-0001`-style inventory ID and generate its slug.
+3. Complete the English name and all known identification, condition, provenance, and commercial details.
+4. Upload at least one image and assign its image type. The first/front image becomes the primary image.
+5. Keep unverified claims out of public fields. Use authentication notes to distinguish opinion, attribution, and documented fact.
+6. Choose Available, Reserved, Sold, or Archived.
+7. Turn on **Show on Website**, then publish.
+
+The public website never exposes Sanity write credentials. All editing remains inside authenticated Sanity Studio.
+
+## Before each public release
+
+- Verify inventory and product pages against at least one real item.
+- Check English, Thai, and Simplified Chinese switching.
+- Check phone and desktop layouts.
+- Review contact details and policy dates.
+- Confirm `CNAME` still contains `www.amuletcycle168.com`.

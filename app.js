@@ -1,136 +1,382 @@
-// =============================================
-// SANITY CONFIGURATION
-// =============================================
-
 const SANITY_PROJECT_ID = '5ik5680s';
 const SANITY_DATASET = 'production';
 const SANITY_API_VERSION = '2026-08-25';
+const SANITY_BASE_URL = `https://${SANITY_PROJECT_ID}.api.sanity.io/v${SANITY_API_VERSION}/data/query/${SANITY_DATASET}`;
 
-const SANITY_BASE_URL =
-  `https://<projectId>.apicdn.sanity.io/v<date>/data/query/<dataset>`;
+let currentLanguage = localStorage.getItem('ac168-language') || 'en';
+let loadedAmulets = [];
 
-  // =============================================
-// LOAD AMULETS FROM SANITY
-// =============================================
+const AMULET_PROJECTION = `{
+  _id, inventoryId, name, "slug": slug.current, category, monkMaster,
+  temple, province, year, material, widthMm, heightMm, thicknessMm, weightG,
+  conditionGrade, conditionNotes, story, description, origin, provenance,
+  authenticationNotes, priceThb, showOnWebsite, featured, newArrival, status, sortOrder,
+  "images": images[]{"url": asset->url, imageType, caption, altText},
+  "documents": documents[publiclyVisible == true]{title, "url": asset->url}
+}`;
+
+async function querySanity(query, params = {}) {
+  const search = new URLSearchParams({query});
+  Object.entries(params).forEach(([key, value]) => search.set(`$${key}`, JSON.stringify(value)));
+
+  const response = await fetch(`${SANITY_BASE_URL}?${search.toString()}`);
+  if (!response.ok) throw new Error(`Sanity returned HTTP ${response.status}`);
+
+  const payload = await response.json();
+  return payload.result;
+}
 
 async function fetchAmulets() {
+  const query = `*[_type == "amulet" && showOnWebsite == true] | order(coalesce(sortOrder, 999999) asc, _createdAt desc) ${AMULET_PROJECTION}`;
+  return (await querySanity(query)) || [];
+}
 
-  const query = `
-    *[
-      _type == "amulet" &&
-      showOnWebsite == true
-    ]
-    | order(_createdAt desc)
-    {
-      _id,
-      inventoryId,
-      name,
-      "slug": slug.current,
-      category,
-      monkMaster,
-      temple,
-      year,
-      material,
-      widthMm,
-      heightMm,
-      story,
-      description,
-      priceThb,
-      showOnWebsite,
-      featured,
-      newArrival,
-      status,
+async function fetchAmuletById(inventoryId) {
+  const query = `*[_type == "amulet" && showOnWebsite == true && inventoryId == $inventoryId][0] ${AMULET_PROJECTION}`;
+  return querySanity(query, {inventoryId});
+}
 
-      "images": images[]{
-        "url": asset->url,
-        imageType,
-        caption
-      }
-    }
-  `;
+function getLocalizedText(field) {
+  if (!field) return '';
+  if (typeof field === 'string') return field;
+  return field[currentLanguage] || field.en || field.th || field.zh || '';
+}
 
-  const url =
-    `${SANITY_BASE_URL}?query=${encodeURIComponent(query)}`;
+function t(key) {
+  return window.AC168_TRANSLATIONS?.[currentLanguage]?.[key] ||
+    window.AC168_TRANSLATIONS?.en?.[key] || key;
+}
+
+function applyTranslations() {
+  document.documentElement.lang = currentLanguage === 'zh' ? 'zh-CN' : currentLanguage;
+  document.querySelectorAll('[data-i18n]').forEach((element) => {
+    element.textContent = t(element.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((element) => {
+    element.placeholder = t(element.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('[data-language]').forEach((button) => {
+    const active = button.dataset.language === currentLanguage;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+}
+
+function setLanguage(language) {
+  if (!['en', 'th', 'zh'].includes(language)) return;
+  currentLanguage = language;
+  localStorage.setItem('ac168-language', language);
+  applyTranslations();
+  populateCategoryFilter(loadedAmulets);
+  renderInventory();
+  initializeFeatured();
+  initializeStories();
+
+  const productContainer = document.getElementById('product-detail');
+  if (productContainer) initializeProductDetail();
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function formatPrice(priceThb) {
+  const locale = currentLanguage === 'th' ? 'th-TH' : currentLanguage === 'zh' ? 'zh-CN' : 'en-US';
+  return typeof priceThb === 'number' ? `฿${priceThb.toLocaleString(locale)}` : t('product.priceRequest');
+}
+
+function getStatusLabel(status) {
+  return status ? t(`status.${status}`) : '';
+}
+
+function getPrimaryImage(amulet) {
+  return amulet.images?.find((image) => image.imageType === 'front')?.url || amulet.images?.[0]?.url || '';
+}
+
+function getProductUrl(amulet) {
+  return `product.html?id=${encodeURIComponent(amulet.inventoryId || '')}`;
+}
+
+function setMeta(selector, attribute, value) {
+  const element = document.head.querySelector(selector);
+  if (element && value) element.setAttribute(attribute, value);
+}
+
+function createProductCard(amulet) {
+  const name = getLocalizedText(amulet.name) || amulet.inventoryId || 'Untitled amulet';
+  const temple = getLocalizedText(amulet.temple);
+  const material = getLocalizedText(amulet.material);
+  const category = getLocalizedText(amulet.category);
+  const mainImage = getPrimaryImage(amulet);
+  const article = document.createElement('article');
+
+  article.className = 'product-card';
+  article.innerHTML = `
+    <a class="product-link" href="${getProductUrl(amulet)}">
+      <div class="product-image-wrap">
+        ${mainImage
+          ? `<img class="product-image-real" src="${escapeHtml(mainImage)}" alt="${escapeHtml(name)}" loading="lazy">`
+          : '<div class="product-image-placeholder" aria-label="Image not yet available">AMULET</div>'}
+        ${amulet.newArrival ? '<span class="new-arrival-badge">NEW ARRIVAL</span>' : ''}
+      </div>
+      <div class="product-card-body">
+        <div class="product-card-top">
+          <span class="inventory-id">${escapeHtml(amulet.inventoryId)}</span>
+          <span class="status-badge status-${escapeHtml(amulet.status)}">${escapeHtml(getStatusLabel(amulet.status))}</span>
+        </div>
+        <h3 class="product-title">${escapeHtml(name)}</h3>
+        ${temple ? `<p class="product-meta">${escapeHtml(temple)}</p>` : ''}
+        ${material || amulet.year ? `<p class="product-meta">${escapeHtml([material, amulet.year].filter(Boolean).join(' · '))}</p>` : ''}
+        ${category ? `<p class="product-category">${escapeHtml(category)}</p>` : ''}
+        <p class="product-price">${escapeHtml(formatPrice(amulet.priceThb))}</p>
+      </div>
+    </a>`;
+
+  return article;
+}
+
+function renderProductCards(container, amulets) {
+  container.replaceChildren();
+  if (!amulets.length) {
+    container.innerHTML = `<p class="inventory-message">${escapeHtml(t('inventory.empty'))}</p>`;
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  amulets.forEach((amulet) => fragment.appendChild(createProductCard(amulet)));
+  container.appendChild(fragment);
+}
+
+function renderInventory() {
+  const grid = document.getElementById('inventoryGrid');
+  if (!grid) return;
+
+  const search = (document.getElementById('inventory-search')?.value || '').trim().toLowerCase();
+  const category = document.getElementById('category-filter')?.value || 'all';
+  const status = document.getElementById('status-filter')?.value || 'all';
+  const filtered = loadedAmulets.filter((amulet) => {
+    const itemCategory = getLocalizedText(amulet.category);
+    const searchable = [amulet.inventoryId, getLocalizedText(amulet.name), getLocalizedText(amulet.temple), itemCategory, getLocalizedText(amulet.material), amulet.year]
+      .filter(Boolean).join(' ').toLowerCase();
+
+    return (!search || searchable.includes(search)) &&
+      (category === 'all' || itemCategory === category) &&
+      (status === 'all' || amulet.status === status);
+  });
+
+  renderProductCards(grid, filtered);
+}
+
+function populateCategoryFilter(amulets) {
+  const select = document.getElementById('category-filter');
+  if (!select) return;
+
+  const categories = [...new Set(amulets.map((amulet) => getLocalizedText(amulet.category)).filter(Boolean))].sort();
+  select.innerHTML = `<option value="all">${escapeHtml(t('inventory.allCategories'))}</option>`;
+  categories.forEach((category) => {
+    const option = document.createElement('option');
+    option.value = category;
+    option.textContent = category;
+    select.appendChild(option);
+  });
+}
+
+async function initializeInventory() {
+  const grid = document.getElementById('inventoryGrid');
+  if (!grid) return;
+  grid.innerHTML = `<p class="inventory-message">${escapeHtml(t('inventory.loading'))}</p>`;
 
   try {
-
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(
-        `Sanity request failed: ${response.status}`
-      );
-    }
-
-    const data = await response.json();
-
-    console.log('Amulets loaded from Sanity:', data.result);
-
-    return data.result;
-
+    loadedAmulets = await fetchAmulets();
+    populateCategoryFilter(loadedAmulets);
+    renderInventory();
   } catch (error) {
-
-    console.error('Could not load Sanity inventory:', error);
-
-    return [];
+    console.error('Inventory initialization failed:', error);
+    grid.innerHTML = `<div class="inventory-message inventory-error"><strong>${escapeHtml(t('inventory.errorTitle'))}</strong><span>${escapeHtml(t('inventory.errorCopy'))}</span></div>`;
   }
 }
 
-const inventory = [
- {id:"AC168-0001",name:"Somdej — Collector Placeholder",temple:"Bangkok · Wat Example",category:"Buddha",era:"25XX BE",material:"Sacred powder",condition:"Excellent",price:"฿35,000",status:"Available",story:"Three Generations in Bangkok"},
- {id:"AC168-0002",name:"Meditation Buddha — Placeholder",temple:"Bangkok · Temple Example",category:"Buddha",era:"Vintage",material:"Bronze",condition:"Very good",price:"฿28,000",status:"Available",story:"A Quiet Journey"},
- {id:"AC168-0003",name:"Monk Portrait — Placeholder",temple:"Thailand",category:"Monk",era:"25XX BE",material:"Metal",condition:"Excellent",price:"฿18,000",status:"Reserved",story:"The Collector's Gift"},
- {id:"AC168-0004",name:"Vintage Talisman — Placeholder",temple:"Central Thailand",category:"Talisman",era:"Vintage",material:"Metal",condition:"Good",price:"฿12,800",status:"Sold",story:"A Piece That Traveled"},
- {id:"AC168-0005",name:"Buddha Tablet — Placeholder",temple:"Bangkok",category:"Vintage",era:"Vintage",material:"Powder",condition:"Excellent",price:"฿42,000",status:"Available",story:"Archive Piece"}
-];
-
-function card(p){
- return `<a class="product-card" href="product.html?id=${encodeURIComponent(p.id)}">
-   <div class="product-image"></div>
-   <div class="product-body">
-    <span class="id">${p.id}</span><span class="status">${p.status}</span>
-    <h3>${p.name}</h3><p>${p.temple}<br>${p.material} · ${p.condition}</p>
-    <span class="price">${p.price}</span>
-   </div>
- </a>`;
+function createSpec(label, value) {
+  if (value === '' || value === undefined || value === null) return '';
+  return `<div class="spec"><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b></div>`;
 }
-function renderInventory(){
- const grid=document.getElementById("inventory-grid"); if(!grid)return;
- const q=(document.getElementById("inventory-search")?.value||"").toLowerCase();
- const cat=document.getElementById("category-filter")?.value||"all";
- const status=document.getElementById("status-filter")?.value||"all";
- const filtered=inventory.filter(p=>(cat==="all"||p.category===cat)&&(status==="all"||p.status===status)&&[p.id,p.name,p.temple,p.category,p.material].join(" ").toLowerCase().includes(q));
- grid.innerHTML=filtered.length?filtered.map(card).join(""):`<p class="muted">No pieces matched your search.</p>`;
+
+function renderProductDetail(container, amulet) {
+  if (!amulet) {
+    container.innerHTML = `<div class="product-not-found"><p class="eyebrow">${escapeHtml(t('inventory.kicker'))}</p><h1>${escapeHtml(t('product.notFound'))}</h1><p>${escapeHtml(t('product.notFoundCopy'))}</p><a class="btn gold" href="inventory.html">${escapeHtml(t('product.returnInventory'))}</a></div>`;
+    return;
+  }
+
+  const name = getLocalizedText(amulet.name) || amulet.inventoryId;
+  const description = getLocalizedText(amulet.description);
+  const story = getLocalizedText(amulet.story);
+  const temple = getLocalizedText(amulet.temple);
+  const material = getLocalizedText(amulet.material);
+  const category = getLocalizedText(amulet.category);
+  const monkMaster = getLocalizedText(amulet.monkMaster);
+  const province = getLocalizedText(amulet.province);
+  const condition = getLocalizedText(amulet.conditionNotes) || amulet.conditionGrade;
+  const provenance = getLocalizedText(amulet.provenance) || getLocalizedText(amulet.origin);
+  const authenticationNotes = getLocalizedText(amulet.authenticationNotes);
+  const images = amulet.images || [];
+  const primaryImage = getPrimaryImage(amulet);
+  const orderedImages = primaryImage ? [...images].sort((a, b) => (a.url === primaryImage ? -1 : b.url === primaryImage ? 1 : 0)) : images;
+  const inquiryText = `Hello Amulet Cycle 168, I am interested in Inventory ID: ${amulet.inventoryId}. Could you please provide more information?`;
+  const whatsappUrl = `https://wa.me/66649322036?text=${encodeURIComponent(inquiryText)}`;
+  document.title = `${name} | Amulet Cycle 168`;
+  const metaDescription = (description || story || `${amulet.inventoryId} from the Amulet Cycle 168 collection`).slice(0, 155);
+  setMeta('meta[name="description"]', 'content', metaDescription);
+  setMeta('meta[property="og:title"]', 'content', `${name} | Amulet Cycle 168`);
+  setMeta('meta[property="og:description"]', 'content', metaDescription);
+  setMeta('meta[property="og:image"]', 'content', primaryImage);
+
+  container.innerHTML = `
+    <div class="product-gallery-shell">
+      <div class="product-main-image">
+        ${primaryImage ? `<img id="productMainImage" src="${escapeHtml(primaryImage)}" alt="${escapeHtml(name)}">` : '<div class="product-main-placeholder">IMAGE COMING SOON</div>'}
+      </div>
+      ${orderedImages.length > 1 ? `<div class="product-thumbnails" aria-label="Product images">
+        ${orderedImages.map((image, index) => {
+          const caption = getLocalizedText(image.caption) || image.imageType || `Image ${index + 1}`;
+          return `<button class="product-thumbnail${index === 0 ? ' active' : ''}" type="button" data-image-url="${escapeHtml(image.url)}" data-image-alt="${escapeHtml(caption)}" aria-label="View ${escapeHtml(caption)}"><img src="${escapeHtml(image.url)}" alt=""><span>${escapeHtml(image.imageType || index + 1)}</span></button>`;
+        }).join('')}
+      </div>` : ''}
+    </div>
+    <div class="product-info">
+      <p class="eyebrow">${escapeHtml(amulet.inventoryId)} · ${escapeHtml(getStatusLabel(amulet.status))}</p>
+      <h1>${escapeHtml(name)}</h1>
+      <p class="product-detail-price">${escapeHtml(formatPrice(amulet.priceThb))}</p>
+      ${description ? `<p class="lead product-description">${escapeHtml(description)}</p>` : ''}
+      <div class="specs">
+        ${createSpec(t('product.temple'), temple)}${createSpec(t('product.monk'), monkMaster)}${createSpec(t('product.province'), province)}${createSpec(t('product.category'), category)}
+        ${createSpec(t('product.year'), amulet.year)}${createSpec(t('product.material'), material)}
+        ${createSpec(t('product.width'), amulet.widthMm !== undefined ? `${amulet.widthMm} mm` : '')}
+        ${createSpec(t('product.height'), amulet.heightMm !== undefined ? `${amulet.heightMm} mm` : '')}
+        ${createSpec(t('product.thickness'), amulet.thicknessMm !== undefined ? `${amulet.thicknessMm} mm` : '')}
+        ${createSpec(t('product.weight'), amulet.weightG !== undefined ? `${amulet.weightG} g` : '')}
+        ${createSpec(t('product.condition'), condition)}${createSpec(t('product.status'), getStatusLabel(amulet.status))}
+      </div>
+      ${story ? `<section class="product-story"><p class="eyebrow">${escapeHtml(t('product.story'))}</p><p>${escapeHtml(story)}</p></section>` : ''}
+      ${provenance ? `<section class="product-story"><p class="eyebrow">${escapeHtml(t('product.provenance'))}</p><p>${escapeHtml(provenance)}</p></section>` : ''}
+      ${authenticationNotes ? `<section class="product-story"><p class="eyebrow">${escapeHtml(t('product.authentication'))}</p><p>${escapeHtml(authenticationNotes)}</p></section>` : ''}
+      <div class="product-actions">
+        <a class="btn gold" href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">${escapeHtml(t('product.whatsapp'))}</a>
+        <a class="btn" href="contact.html?amulet=${encodeURIComponent(amulet.inventoryId)}">${escapeHtml(t('product.otherContact'))}</a>
+      </div>
+      <p class="product-disclaimer">${escapeHtml(t('product.disclaimer'))}</p>
+    </div>`;
+
+  container.querySelectorAll('.product-thumbnail').forEach((button) => {
+    button.addEventListener('click', () => {
+      const mainImage = document.getElementById('productMainImage');
+      if (!mainImage) return;
+      mainImage.src = button.dataset.imageUrl;
+      mainImage.alt = button.dataset.imageAlt;
+      container.querySelectorAll('.product-thumbnail').forEach((item) => item.classList.remove('active'));
+      button.classList.add('active');
+    });
+  });
 }
-function renderFeatured(){
- const grid=document.getElementById("featured-grid"); if(grid)grid.innerHTML=inventory.filter(p=>p.status==="Available").slice(0,4).map(card).join("");
+
+async function initializeProductDetail() {
+  const container = document.getElementById('product-detail');
+  if (!container) return;
+  const inventoryId = new URLSearchParams(window.location.search).get('id');
+  if (!inventoryId) return renderProductDetail(container, null);
+
+  container.innerHTML = `<p class="inventory-message">${escapeHtml(t('product.loading'))}</p>`;
+  try {
+    renderProductDetail(container, await fetchAmuletById(inventoryId));
+  } catch (error) {
+    console.error('Product initialization failed:', error);
+    container.innerHTML = `<div class="product-not-found"><p class="eyebrow">${escapeHtml(t('inventory.kicker'))}</p><h1>${escapeHtml(t('product.unavailable'))}</h1><p>${escapeHtml(t('product.unavailableCopy'))}</p><a class="btn gold" href="inventory.html">${escapeHtml(t('product.returnInventory'))}</a></div>`;
+  }
 }
-function renderProduct(){
- const el=document.getElementById("product-detail"); if(!el)return;
- const id=new URLSearchParams(location.search).get("id")||"AC168-0001";
- const p=inventory.find(x=>x.id===id)||inventory[0];
- el.innerHTML=`<div>
-   <div class="product-gallery"><div class="gallery-shot">FRONT</div><div class="gallery-shot">BACK</div><div class="gallery-shot">DETAIL</div><div class="gallery-shot">SIDE</div></div>
-  </div>
-  <div class="product-info">
-   <p class="eyebrow">${p.id} · ${p.status.toUpperCase()}</p><h1>${p.name}</h1><p class="lead">${p.temple}. This is a placeholder listing designed for the first website version. Replace the facts, photographs, provenance and pricing with verified information before publishing.</p>
-   <div class="specs">
-    <div class="spec"><span>Era</span><b>${p.era}</b></div><div class="spec"><span>Material</span><b>${p.material}</b></div><div class="spec"><span>Condition</span><b>${p.condition}</b></div><div class="spec"><span>Category</span><b>${p.category}</b></div><div class="spec"><span>Price</span><b>${p.price}</b></div>
-   </div>
-   <a class="btn gold" href="contact.html?amulet=${encodeURIComponent(p.id)}">Inquire About This Amulet →</a>
-   <p class="muted" style="margin-top:16px">For international collectors, ask us about shipping, documentation and available payment methods before purchase.</p>
-  </div>`;
+
+async function initializeFeatured() {
+  const grid = document.getElementById('featured-grid');
+  if (!grid) return;
+  try {
+    const amulets = await fetchAmulets();
+    const featured = amulets.filter((amulet) => amulet.featured).slice(0, 4);
+    renderProductCards(grid, featured.length ? featured : amulets.slice(0, 4));
+  } catch (error) {
+    console.error('Featured inventory failed:', error);
+    grid.innerHTML = '<p class="inventory-message">Featured pieces are temporarily unavailable.</p>';
+  }
 }
-function focusSearch(){location.href="inventory.html#inventory-search";setTimeout(()=>document.getElementById("inventory-search")?.focus(),300)}
-function subscribe(e){e.preventDefault();alert("Thank you. Newsletter connection will be added before launch.");}
-function sendInquiry(e){e.preventDefault();document.getElementById("form-message").textContent="Thank you. The form is currently in demo mode; connect it to your preferred email/form service before launch.";}
-document.querySelector(".menu-toggle")?.addEventListener("click",()=>document.querySelector(".nav")?.classList.toggle("open"));
-renderFeatured(); renderInventory(); renderProduct();
 
-fetchAmulets().then((amulets) => {
+async function initializeStories() {
+  const list = document.getElementById('story-list');
+  if (!list) return;
 
-  console.log('SANITY TEST RESULT:');
+  try {
+    const amulets = await fetchAmulets();
+    const stories = amulets.filter((amulet) => getLocalizedText(amulet.story));
 
-  console.log(amulets);
+    if (!stories.length) {
+      list.innerHTML = `<p class="inventory-message">${escapeHtml(t('story.empty'))}</p>`;
+      return;
+    }
 
+    list.innerHTML = stories.map((amulet) => {
+      const name = getLocalizedText(amulet.name);
+      const story = getLocalizedText(amulet.story);
+      const image = getPrimaryImage(amulet);
+      return `<article class="story-entry">
+        <a class="story-image" href="${getProductUrl(amulet)}">${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(name)}" loading="lazy">` : ''}</a>
+        <div><p class="eyebrow">${escapeHtml(amulet.inventoryId)}</p><h2>${escapeHtml(name)}</h2><p>${escapeHtml(story)}</p><a class="text-link" href="${getProductUrl(amulet)}">${escapeHtml(t('story.read'))} →</a></div>
+      </article>`;
+    }).join('');
+  } catch (error) {
+    console.error('Stories failed:', error);
+    list.innerHTML = `<p class="inventory-message">${escapeHtml(t('inventory.errorCopy'))}</p>`;
+  }
+}
+
+function focusSearch() {
+  window.location.href = 'inventory.html#inventory-search';
+}
+
+function subscribe(event) {
+  event.preventDefault();
+  alert('Thank you. Newsletter connection will be added before launch.');
+}
+
+function sendInquiry(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const data = new FormData(form);
+  const lines = [
+    'Hello Amulet Cycle 168,',
+    data.get('name') ? `Name: ${data.get('name')}` : '',
+    data.get('country') ? `Country: ${data.get('country')}` : '',
+    data.get('amulet') ? `Inventory ID: ${data.get('amulet')}` : '',
+    data.get('message') ? `Question: ${data.get('message')}` : '',
+  ].filter(Boolean);
+  window.open(`https://wa.me/66649322036?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener');
+}
+
+document.querySelector('.menu-toggle')?.addEventListener('click', () => document.querySelector('.nav')?.classList.toggle('open'));
+document.querySelectorAll('[data-language]').forEach((button) => button.addEventListener('click', () => setLanguage(button.dataset.language)));
+document.addEventListener('DOMContentLoaded', () => {
+  const requestedLanguage = navigator.language?.toLowerCase();
+  if (!localStorage.getItem('ac168-language')) {
+    currentLanguage = requestedLanguage?.startsWith('th') ? 'th' : requestedLanguage?.startsWith('zh') ? 'zh' : 'en';
+  }
+  applyTranslations();
+
+  const inquiryId = new URLSearchParams(window.location.search).get('amulet');
+  const inquiryField = document.querySelector('[name="amulet"]');
+  if (inquiryId && inquiryField) inquiryField.value = inquiryId;
+
+  initializeInventory();
+  initializeProductDetail();
+  initializeFeatured();
+  initializeStories();
 });
