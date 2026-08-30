@@ -14,7 +14,8 @@
     />
     <title>Contact | Amulet Cycle 168</title>
     <link rel="canonical" href="https://www.amuletcycle168.com/contact.html" />
-    <link rel="stylesheet" href="styles.css?v=20260828-1" />
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20260830-1" />
+    <link rel="stylesheet" href="styles.css?v=20260830-1" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -84,13 +85,12 @@
           <div class="contact-address">
             <strong data-i18n="contact.headquarters">Headquarters</strong
             ><span data-contact="address"
-              >33 Ratchaphruek Road
-Bang Kho, Chom Thong
-Bangkok 10150, Thailand</span
+              >33 Ratchaphruek Road Bang Kho, Chom Thong Bangkok 10150,
+              Thailand</span
             >
           </div>
         </div>
-        <form class="contact-form" onsubmit="sendInquiry(event)">
+        <form class="contact-form" onsubmit="openContactModal(event)">
           <h2 data-i18n="contact.formTitle">Prepare your inquiry</h2>
           <label
             ><span data-i18n="contact.name">Name</span
@@ -106,30 +106,16 @@ Bangkok 10150, Thailand</span
               pattern="AC168-[0-9]{4,}" /></label
           ><label
             ><span data-i18n="contact.message">Question</span
-            ><textarea name="message" rows="6" required></textarea></label
-          ><div class="contact-form-actions">
+            ><textarea name="message" rows="6" required></textarea>
+          </label>
+          <div class="contact-form-actions">
             <button class="btn gold" type="submit" data-i18n="contact.send">
-              Continue to WhatsApp
+              Send Inquiry
             </button>
-            <button
-              class="btn"
-              type="button"
-              onclick="copyInquiryForWeChat(event)"
-              data-i18n="contact.copyWeChat"
-            >
-              Copy for WeChat
-            </button>
-            <a
-              class="btn"
-              data-contact="telephone"
-              href="tel:+66816271218"
-              data-i18n="contact.call"
-              >Call us</a
-            >
           </div>
           <p class="form-message" data-i18n="contact.note">
-            Your message is not stored by this website. Choose WhatsApp, copy
-            it for WeChat, or call us.
+            Your message is not stored by this website. Choose your preferred
+            contact channel in the next window.
           </p>
         </form>
       </section>
@@ -140,7 +126,7 @@ Bangkok 10150, Thailand</span
         <a href="policies.html" data-i18n="footer.information">Information</a>
       </div>
     </footer>
-    <script src="translations.js?v=20260828-1"></script>
-    <script src="app.js?v=20260828-1"></script>
+    <script src="translations.js?v=20260830-1"></script>
+    <script src="app.js?v=20260830-1"></script>
   </body>
 </html>

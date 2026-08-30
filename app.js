@@ -5,6 +5,8 @@ const SANITY_BASE_URL = `https://${SANITY_PROJECT_ID}.api.sanity.io/v${SANITY_AP
 
 let currentLanguage = localStorage.getItem("ac168-language") || "en";
 let loadedAmulets = [];
+let contactModalPreviousFocus = null;
+let contactModalInquiry = "";
 let currentContacts = {
   whatsappNumber: "66649322036",
   whatsappDisplay: "+66 64 932 2036",
@@ -140,6 +142,149 @@ function applyContactSettings() {
         grid.append(link);
       });
   });
+  if (document.getElementById("contact-modal")) renderContactModal();
+}
+
+function getContactInquiry(source) {
+  if (source?.matches?.("form")) return buildInquiryMessage(source);
+  if (source?.dataset?.contactInquiry) return source.dataset.contactInquiry;
+  return "";
+}
+
+function renderContactModal() {
+  const modal = document.getElementById("contact-modal");
+  if (!modal) return;
+  const message = contactModalInquiry;
+  const whatsappUrl = `https://wa.me/${currentContacts.whatsappNumber}${message ? `?text=${encodeURIComponent(message)}` : ""}`;
+  const emailUrl = currentContacts.email
+    ? `mailto:${currentContacts.email}${message ? `?subject=${encodeURIComponent(t("contact.emailSubject"))}&body=${encodeURIComponent(message)}` : ""}`
+    : "";
+  const channels = [
+    {
+      label: t("contact.whatsapp"),
+      value: currentContacts.whatsappDisplay,
+      href: whatsappUrl,
+      external: true,
+    },
+    {
+      label: t("contact.wechat"),
+      value: currentContacts.wechatId,
+      action: "wechat",
+    },
+    {
+      label: t("contact.telephone"),
+      value: currentContacts.telephoneDisplay,
+      href: `tel:+${currentContacts.telephoneNumber}`,
+    },
+    currentContacts.email
+      ? {
+          label: t("contact.email"),
+          value: currentContacts.email,
+          href: emailUrl,
+        }
+      : null,
+    currentContacts.lineId
+      ? {
+          label: t("contact.line"),
+          value: currentContacts.lineId,
+          href: `https://line.me/ti/p/~${encodeURIComponent(currentContacts.lineId)}`,
+          external: true,
+        }
+      : null,
+  ].filter(Boolean);
+
+  modal.querySelector(".contact-modal-title").textContent =
+    t("contact.modalTitle");
+  modal.querySelector(".contact-modal-intro").textContent =
+    t("contact.modalIntro");
+  modal
+    .querySelector(".contact-modal-close")
+    .setAttribute("aria-label", t("contact.close"));
+  modal.querySelector(".contact-modal-address-label").textContent = t(
+    "contact.headquarters",
+  );
+  modal.querySelector(".contact-modal-address-value").textContent =
+    getLocalizedText(currentContacts.address);
+  modal.querySelector(".contact-modal-channels").innerHTML = channels
+    .map((channel) =>
+      channel.action === "wechat"
+        ? `<button class="contact-modal-channel" type="button" data-modal-wechat><strong>${escapeHtml(channel.label)}</strong><span>${escapeHtml(channel.value)}</span></button>`
+        : `<a class="contact-modal-channel" href="${escapeHtml(channel.href)}"${channel.external ? ' target="_blank" rel="noopener"' : ""}><strong>${escapeHtml(channel.label)}</strong><span>${escapeHtml(channel.value)}</span></a>`,
+    )
+    .join("");
+  modal
+    .querySelector("[data-modal-wechat]")
+    ?.addEventListener("click", async () => {
+      await copyText(message || currentContacts.wechatId);
+      alert(
+        message
+          ? `${t("contact.copied")} ${currentContacts.wechatId}`
+          : `${t("contact.wechatCopied")} ${currentContacts.wechatId}`,
+      );
+    });
+}
+
+function ensureContactModal() {
+  let modal = document.getElementById("contact-modal");
+  if (modal) return modal;
+  modal = document.createElement("div");
+  modal.id = "contact-modal";
+  modal.className = "contact-modal";
+  modal.hidden = true;
+  modal.innerHTML = `
+    <div class="contact-modal-backdrop" data-modal-close></div>
+    <section class="contact-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="contact-modal-title" tabindex="-1">
+      <button class="contact-modal-close" type="button" data-modal-close aria-label="Close">×</button>
+      <p class="eyebrow">AMULET CYCLE 168</p>
+      <h2 class="contact-modal-title" id="contact-modal-title"></h2>
+      <p class="contact-modal-intro"></p>
+      <div class="contact-modal-channels"></div>
+      <div class="contact-modal-address"><strong class="contact-modal-address-label"></strong><span class="contact-modal-address-value"></span></div>
+    </section>`;
+  document.body.append(modal);
+  modal
+    .querySelectorAll("[data-modal-close]")
+    .forEach((control) => control.addEventListener("click", closeContactModal));
+  modal.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeContactModal();
+    if (event.key !== "Tab") return;
+    const focusable = [
+      ...modal.querySelectorAll(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ];
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+  return modal;
+}
+
+function openContactModal(event) {
+  event?.preventDefault?.();
+  const source = event?.currentTarget;
+  contactModalInquiry = getContactInquiry(source);
+  contactModalPreviousFocus = document.activeElement;
+  const modal = ensureContactModal();
+  renderContactModal();
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+  modal.querySelector(".contact-modal-close")?.focus();
+}
+
+function closeContactModal() {
+  const modal = document.getElementById("contact-modal");
+  if (!modal || modal.hidden) return;
+  modal.hidden = true;
+  document.body.classList.remove("modal-open");
+  contactModalPreviousFocus?.focus?.();
 }
 
 async function initializeContactSettings() {
@@ -362,7 +507,6 @@ function renderProductDetail(container, amulet) {
       )
     : images;
   const inquiryText = `Hello Amulet Cycle 168, I am interested in Inventory ID: ${amulet.inventoryId}. Could you please provide more information?`;
-  const whatsappUrl = `https://wa.me/${currentContacts.whatsappNumber}?text=${encodeURIComponent(inquiryText)}`;
   document.title = `${name} | Amulet Cycle 168`;
   const metaDescription = (
     description ||
@@ -413,9 +557,7 @@ function renderProductDetail(container, amulet) {
       ${provenance ? `<section class="product-story"><p class="eyebrow">${escapeHtml(t("product.provenance"))}</p><p>${escapeHtml(provenance)}</p></section>` : ""}
       ${authenticationNotes ? `<section class="product-story"><p class="eyebrow">${escapeHtml(t("product.authentication"))}</p><p>${escapeHtml(authenticationNotes)}</p></section>` : ""}
       <div class="product-actions">
-        <a class="btn gold" href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">${escapeHtml(t("product.whatsapp"))}</a>
-        <button class="btn" type="button" onclick="copyWeChatId()">${escapeHtml(t("product.wechat"))}</button>
-        <a class="btn" href="tel:+${escapeHtml(currentContacts.telephoneNumber)}">${escapeHtml(t("product.call"))}</a>
+        <button class="btn gold" type="button" data-contact-inquiry="${escapeHtml(inquiryText)}" onclick="openContactModal(event)">${escapeHtml(t("product.contactUs"))}</button>
       </div>
       <p class="product-disclaimer">${escapeHtml(t("product.disclaimer"))}</p>
     </div>`;
@@ -515,15 +657,6 @@ function buildInquiryMessage(form) {
     .join("\n");
 }
 
-function sendInquiry(event) {
-  event.preventDefault();
-  window.open(
-    `https://wa.me/${currentContacts.whatsappNumber}?text=${encodeURIComponent(buildInquiryMessage(event.currentTarget))}`,
-    "_blank",
-    "noopener",
-  );
-}
-
 async function copyInquiryForWeChat(event) {
   const form = event.currentTarget.closest("form");
   await copyText(buildInquiryMessage(form));
@@ -560,6 +693,9 @@ document
       setLanguage(button.dataset.language),
     ),
   );
+document
+  .querySelectorAll('.nav a[href="contact.html"]')
+  .forEach((link) => link.addEventListener("click", openContactModal));
 document.addEventListener("DOMContentLoaded", async () => {
   const requestedLanguage = navigator.language?.toLowerCase();
   if (!localStorage.getItem("ac168-language")) {
