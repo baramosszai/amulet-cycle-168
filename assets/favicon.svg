@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Amulet Cycle 168">
+  <defs>
+    <linearGradient id="gold" x1="12" y1="8" x2="52" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f0d694"/>
+      <stop offset="0.48" stop-color="#b88a43"/>
+      <stop offset="1" stop-color="#725126"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#0b0c0c"/>
+  <path d="M32 8.5c-10.8 0-19.5 8.7-19.5 19.5 0 12.5 8.4 22.6 19.5 27.5C43.1 50.6 51.5 40.5 51.5 28 51.5 17.2 42.8 8.5 32 8.5Z" fill="#151515" stroke="url(#gold)" stroke-width="3"/>
+  <circle cx="32" cy="29" r="11.5" fill="none" stroke="url(#gold)" stroke-width="2.5"/>
+  <circle cx="32" cy="29" r="4" fill="url(#gold)"/>
+  <path d="M24.5 45.5h15" stroke="#b88a43" stroke-width="2" stroke-linecap="round"/>
+</svg>
