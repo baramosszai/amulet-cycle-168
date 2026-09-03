@@ -585,6 +585,138 @@ function createSpec(label, value) {
   return `<div class="spec"><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b></div>`;
 }
 
+function initializeProductImageViewer(container) {
+  const openButton = container.querySelector("[data-open-product-viewer]");
+  const dialog = container.querySelector("[data-product-image-viewer]");
+  const zoomStage = dialog?.querySelector("[data-product-zoom-stage]");
+  const zoomImage = dialog?.querySelector("[data-product-zoom-image]");
+  const zoomLevel = dialog?.querySelector("[data-product-zoom-level]");
+  if (!openButton || !dialog || !zoomStage || !zoomImage) return null;
+
+  const minimumZoom = 1;
+  const maximumZoom = 6;
+  let zoom = minimumZoom;
+  let panX = 0;
+  let panY = 0;
+  let dragPointer = null;
+  let lastPointerX = 0;
+  let lastPointerY = 0;
+  let pinchDistance = 0;
+  const pointers = new Map();
+
+  const applyTransform = () => {
+    zoomImage.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${zoom})`;
+    if (zoomLevel) zoomLevel.textContent = `${Math.round(zoom * 100)}%`;
+    const zoomOut = dialog.querySelector("[data-product-zoom-out]");
+    const zoomIn = dialog.querySelector("[data-product-zoom-in]");
+    if (zoomOut) zoomOut.disabled = zoom <= minimumZoom;
+    if (zoomIn) zoomIn.disabled = zoom >= maximumZoom;
+    zoomStage.classList.toggle("is-zoomed", zoom > minimumZoom);
+  };
+
+  const resetZoom = () => {
+    zoom = minimumZoom;
+    panX = 0;
+    panY = 0;
+    applyTransform();
+  };
+
+  const setZoom = (nextZoom) => {
+    zoom = Math.min(maximumZoom, Math.max(minimumZoom, nextZoom));
+    if (zoom === minimumZoom) {
+      panX = 0;
+      panY = 0;
+    }
+    applyTransform();
+  };
+
+  const openViewer = () => {
+    resetZoom();
+    dialog.showModal();
+    zoomStage.focus();
+  };
+
+  openButton.addEventListener("click", openViewer);
+  dialog
+    .querySelector("[data-product-viewer-close]")
+    ?.addEventListener("click", () => dialog.close());
+  dialog
+    .querySelector("[data-product-zoom-in]")
+    ?.addEventListener("click", () => setZoom(zoom + 0.5));
+  dialog
+    .querySelector("[data-product-zoom-out]")
+    ?.addEventListener("click", () => setZoom(zoom - 0.5));
+  dialog
+    .querySelector("[data-product-zoom-reset]")
+    ?.addEventListener("click", resetZoom);
+
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  dialog.addEventListener("close", resetZoom);
+
+  zoomStage.addEventListener(
+    "wheel",
+    (event) => {
+      event.preventDefault();
+      setZoom(zoom + (event.deltaY < 0 ? 0.35 : -0.35));
+    },
+    { passive: false },
+  );
+  zoomStage.addEventListener("dblclick", () => {
+    setZoom(zoom > minimumZoom ? minimumZoom : 2.5);
+  });
+  zoomStage.addEventListener("keydown", (event) => {
+    if (event.key === "+" || event.key === "=") setZoom(zoom + 0.5);
+    if (event.key === "-") setZoom(zoom - 0.5);
+    if (event.key === "0") resetZoom();
+  });
+
+  zoomStage.addEventListener("pointerdown", (event) => {
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    zoomStage.setPointerCapture(event.pointerId);
+    dragPointer = event.pointerId;
+    lastPointerX = event.clientX;
+    lastPointerY = event.clientY;
+    if (pointers.size === 2) {
+      const [first, second] = [...pointers.values()];
+      pinchDistance = Math.hypot(second.x - first.x, second.y - first.y);
+    }
+  });
+  zoomStage.addEventListener("pointermove", (event) => {
+    if (!pointers.has(event.pointerId)) return;
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointers.size === 2) {
+      const [first, second] = [...pointers.values()];
+      const nextDistance = Math.hypot(second.x - first.x, second.y - first.y);
+      if (pinchDistance) setZoom(zoom * (nextDistance / pinchDistance));
+      pinchDistance = nextDistance;
+      return;
+    }
+    if (dragPointer === event.pointerId && zoom > minimumZoom) {
+      panX += event.clientX - lastPointerX;
+      panY += event.clientY - lastPointerY;
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+      applyTransform();
+    }
+  });
+  const releasePointer = (event) => {
+    pointers.delete(event.pointerId);
+    if (dragPointer === event.pointerId) dragPointer = null;
+    pinchDistance = 0;
+  };
+  zoomStage.addEventListener("pointerup", releasePointer);
+  zoomStage.addEventListener("pointercancel", releasePointer);
+
+  applyTransform();
+  return (src, alt) => {
+    zoomImage.src = src;
+    zoomImage.alt = alt;
+    resetZoom();
+  };
+}
+
 function renderProductDetail(container, amulet) {
   if (!amulet) {
     container.innerHTML = `<div class="product-not-found"><p class="eyebrow">${escapeHtml(t("inventory.kicker"))}</p><h1>${escapeHtml(t("product.notFound"))}</h1><p>${escapeHtml(t("product.notFoundCopy"))}</p><a class="btn gold" href="inventory.html">${escapeHtml(t("product.returnInventory"))}</a></div>`;
@@ -625,9 +757,14 @@ function renderProductDetail(container, amulet) {
 
   container.innerHTML = `
     <div class="product-gallery-shell">
-      <div class="product-main-image">
-        ${primaryImage ? `<img id="productMainImage" src="${escapeHtml(primaryImage)}" alt="${escapeHtml(name)}">` : '<div class="product-main-placeholder">IMAGE COMING SOON</div>'}
-      </div>
+      ${
+        primaryImage
+          ? `<button class="product-main-image" type="button" data-open-product-viewer aria-label="${escapeHtml(t("product.openZoom"))}">
+        <img id="productMainImage" src="${escapeHtml(primaryImage)}" alt="${escapeHtml(name)}" draggable="false">
+        <span class="product-zoom-prompt"><span aria-hidden="true">⌕</span>${escapeHtml(t("product.zoomHint"))}</span>
+      </button>`
+          : '<div class="product-main-image"><div class="product-main-placeholder">IMAGE COMING SOON</div></div>'
+      }
       ${
         orderedImages.length > 1
           ? `<div class="product-thumbnails" aria-label="Product images">
@@ -641,6 +778,27 @@ function renderProductDetail(container, amulet) {
           })
           .join("")}
       </div>`
+          : ""
+      }
+      ${
+        primaryImage
+          ? `<dialog class="product-image-viewer" data-product-image-viewer aria-label="${escapeHtml(t("product.openZoom"))}">
+        <div class="product-image-viewer-shell">
+          <div class="product-image-viewer-bar">
+            <div><strong>${escapeHtml(name)}</strong><small>${escapeHtml(t("product.viewerHelp"))}</small></div>
+            <div class="product-zoom-controls">
+              <button type="button" data-product-zoom-out aria-label="${escapeHtml(t("product.zoomOut"))}">−</button>
+              <output data-product-zoom-level aria-live="polite">100%</output>
+              <button type="button" data-product-zoom-in aria-label="${escapeHtml(t("product.zoomIn"))}">+</button>
+              <button type="button" data-product-zoom-reset aria-label="${escapeHtml(t("product.resetZoom"))}">1:1</button>
+              <button class="product-viewer-close" type="button" data-product-viewer-close aria-label="${escapeHtml(t("product.closeZoom"))}">×</button>
+            </div>
+          </div>
+          <div class="product-image-zoom-stage" data-product-zoom-stage tabindex="0">
+            <img data-product-zoom-image src="${escapeHtml(primaryImage)}" alt="${escapeHtml(name)}" draggable="false">
+          </div>
+        </div>
+      </dialog>`
           : ""
       }
     </div>
@@ -667,12 +825,14 @@ function renderProductDetail(container, amulet) {
       <p class="product-disclaimer">${escapeHtml(t("product.disclaimer"))}</p>
     </div>`;
 
+  const updateProductViewer = initializeProductImageViewer(container);
   container.querySelectorAll(".product-thumbnail").forEach((button) => {
     button.addEventListener("click", () => {
       const mainImage = document.getElementById("productMainImage");
       if (!mainImage) return;
       mainImage.src = button.dataset.imageUrl;
       mainImage.alt = button.dataset.imageAlt;
+      updateProductViewer?.(button.dataset.imageUrl, button.dataset.imageAlt);
       container
         .querySelectorAll(".product-thumbnail")
         .forEach((item) => item.classList.remove("active"));

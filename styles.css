@@ -1039,18 +1039,169 @@ h3 {
   min-width: 0;
 }
 .product-main-image {
+  position: relative;
   aspect-ratio: 4/5;
   background: #111516;
   border: 1px solid #4b3a28;
   display: grid;
   place-items: center;
   overflow: hidden;
+  width: 100%;
+  padding: 0;
+  color: var(--cream);
+  cursor: zoom-in;
 }
 .product-main-image img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   background: #0d0f0f;
+}
+.product-zoom-prompt {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid rgba(225, 187, 114, 0.62);
+  background: rgba(7, 9, 9, 0.82);
+  color: var(--cream);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+  transition: background 180ms ease, color 180ms ease;
+}
+.product-main-image:hover .product-zoom-prompt,
+.product-main-image:focus-visible .product-zoom-prompt {
+  background: var(--gold);
+  color: #151007;
+}
+.product-main-image:focus-visible {
+  outline: 2px solid var(--gold2);
+  outline-offset: 3px;
+}
+.product-image-viewer {
+  width: min(96vw, 1600px);
+  height: 94vh;
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  border: 1px solid #6a4d29;
+  background: #070909;
+  color: var(--cream);
+  overflow: hidden;
+}
+.product-image-viewer::backdrop {
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(6px);
+}
+.product-image-viewer-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+}
+.product-image-viewer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 70px;
+  padding: 10px 14px 10px 22px;
+  border-bottom: 1px solid #3e3326;
+  background: #101414;
+}
+.product-image-viewer-bar > div:first-child {
+  min-width: 0;
+}
+.product-image-viewer-bar strong,
+.product-image-viewer-bar small {
+  display: block;
+}
+.product-image-viewer-bar strong {
+  overflow: hidden;
+  color: var(--cream);
+  font-family: "Cormorant Garamond", serif;
+  font-size: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.product-image-viewer-bar small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.product-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+.product-zoom-controls button,
+.product-zoom-controls output {
+  display: grid;
+  min-width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid #594329;
+  background: #0b0e0f;
+  color: var(--cream);
+  font: inherit;
+}
+.product-zoom-controls button {
+  cursor: pointer;
+}
+.product-zoom-controls button:hover,
+.product-zoom-controls button:focus-visible {
+  border-color: var(--gold2);
+  background: var(--gold);
+  color: #151007;
+}
+.product-zoom-controls button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.product-zoom-controls output {
+  min-width: 58px;
+  color: var(--gold2);
+  font-size: 11px;
+}
+.product-viewer-close {
+  margin-left: 5px;
+  font-size: 24px !important;
+}
+.product-image-zoom-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at center, rgba(172, 121, 48, 0.08), transparent 46%),
+    #050707;
+  cursor: zoom-in;
+  touch-action: none;
+  user-select: none;
+}
+.product-image-zoom-stage.is-zoomed {
+  cursor: grab;
+}
+.product-image-zoom-stage.is-zoomed:active {
+  cursor: grabbing;
+}
+.product-image-zoom-stage:focus-visible {
+  outline: 2px solid var(--gold2);
+  outline-offset: -4px;
+}
+.product-image-zoom-stage img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transform-origin: center;
+  will-change: transform;
 }
 .product-main-placeholder {
   color: var(--gold);
@@ -1155,6 +1306,32 @@ h3 {
   }
   .product-actions .btn {
     width: 100%;
+  }
+  .product-zoom-prompt {
+    right: 9px;
+    bottom: 9px;
+    max-width: calc(100% - 18px);
+  }
+  .product-image-viewer {
+    width: 100vw;
+    height: 100dvh;
+    border: 0;
+  }
+  .product-image-viewer-bar {
+    align-items: flex-start;
+    padding: 9px;
+  }
+  .product-image-viewer-bar > div:first-child {
+    display: none;
+  }
+  .product-zoom-controls {
+    width: 100%;
+    justify-content: center;
+  }
+  .product-zoom-controls button,
+  .product-zoom-controls output {
+    min-width: 40px;
+    height: 40px;
   }
 }
 
