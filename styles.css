@@ -177,6 +177,18 @@ textarea {
   object-position: center 10%;
   filter: saturate(0.8);
 }
+.hero-slide--brand {
+  background:
+    radial-gradient(circle at 76% 48%, rgba(181, 126, 44, 0.1), transparent 31%),
+    #070909;
+}
+.hero-slide--brand img {
+  width: min(68%, 1080px);
+  margin-left: auto;
+  object-fit: contain;
+  object-position: right center;
+  filter: none;
+}
 .hero-overlay {
   position: absolute;
   inset: 0;

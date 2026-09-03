@@ -32,7 +32,7 @@
     <title>Amulet Cycle 168 | Bangkok Buddhist Amulets</title>
     <link rel="canonical" href="https://www.amuletcycle168.com/" />
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=20260830-1" />
-    <link rel="stylesheet" href="styles.css?v=20260903-4" />
+    <link rel="stylesheet" href="styles.css?v=20260903-5" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -62,16 +62,34 @@
       </div>
     </header>
     <main id="main">
-      <section class="hero hero-slider">
+      <section
+        class="hero hero-slider"
+        data-hero-slider
+        data-i18n-aria-label="home.sliderLabel"
+        aria-roledescription="carousel"
+      >
         <div class="hero-slider-viewport">
-          <div class="hero-track">
-            <figure class="hero-slide">
+          <div class="hero-track" data-hero-track>
+            <figure class="hero-slide" data-hero-slide aria-hidden="false">
               <img
                 src="assets/hero-luang-pho-kuay-archival.jpg"
                 alt=""
                 width="1672"
                 height="941"
                 fetchpriority="high"
+                decoding="async"
+              />
+            </figure>
+            <figure
+              class="hero-slide hero-slide--brand"
+              data-hero-slide
+              aria-hidden="true"
+            >
+              <img
+                src="assets/hero-amulet-cycle-logo.webp"
+                alt=""
+                width="1536"
+                height="1024"
                 decoding="async"
               />
             </figure>
@@ -95,6 +113,42 @@
               >Read our stories</a
             >
           </div>
+        </div>
+        <div class="hero-controls" aria-label="Wallpaper controls">
+          <button
+            class="hero-arrow"
+            type="button"
+            data-hero-previous
+            data-i18n-aria-label="home.previousSlide"
+            aria-label="Previous wallpaper"
+          >
+            &#8592;
+          </button>
+          <div class="hero-dots" role="group">
+            <button
+              class="hero-dot active"
+              type="button"
+              data-hero-dot
+              aria-current="true"
+              aria-label="Show wallpaper 1"
+            ></button>
+            <button
+              class="hero-dot"
+              type="button"
+              data-hero-dot
+              aria-label="Show wallpaper 2"
+            ></button>
+          </div>
+          <button
+            class="hero-arrow"
+            type="button"
+            data-hero-next
+            data-i18n-aria-label="home.nextSlide"
+            aria-label="Next wallpaper"
+          >
+            &#8594;
+          </button>
+          <span class="sr-only" data-hero-status aria-live="polite"></span>
         </div>
       </section>
       <section class="trust-strip" aria-label="Collector principles">
