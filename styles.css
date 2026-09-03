@@ -394,25 +394,37 @@ h3 {
 }
 .feature-photo {
   height: 245px;
-  background-size: cover;
-  background-position: center;
+  position: relative;
+  overflow: hidden;
+  background: #171514;
 }
-.inventory-photo {
-  background-image:
-    linear-gradient(120deg, #2a1b14, #71502d), url("assets/hero-mockup.png");
-  background-blend-mode: multiply;
+.feature-photo img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+    filter 0.35s ease;
 }
-.story-photo {
-  background-image:
-    linear-gradient(120deg, #2a1b14, #503f2d), url("assets/hero-mockup.png");
-  background-position: 65% 70%;
-  background-blend-mode: multiply;
+.feature-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 52%, rgba(8, 10, 10, 0.76) 100%),
+    linear-gradient(110deg, rgba(199, 145, 55, 0.08), transparent 42%);
 }
-.contact-photo {
-  background-image:
-    linear-gradient(120deg, #1b2224, #5b3f29), url("assets/hero-mockup.png");
-  background-position: 90% 60%;
-  background-blend-mode: multiply;
+.story-photo img {
+  object-position: 52% 54%;
+}
+.contact-photo img {
+  object-position: 53% 52%;
+}
+.feature-card:hover .feature-photo img,
+.feature-card:focus-visible .feature-photo img {
+  transform: scale(1.045);
+  filter: brightness(1.08);
 }
 .feature-body {
   padding: 28px 25px 30px;
