@@ -82,11 +82,116 @@ function applyTranslations() {
   document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
     element.placeholder = t(element.dataset.i18nPlaceholder);
   });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => {
+    element.setAttribute("aria-label", t(element.dataset.i18nAriaLabel));
+  });
+  document.querySelectorAll("[data-hero-dot]").forEach((button, index) => {
+    button.setAttribute("aria-label", `${t("home.goToSlide")} ${index + 1}`);
+  });
   document.querySelectorAll("[data-language]").forEach((button) => {
     const active = button.dataset.language === currentLanguage;
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
+}
+
+function initializeHeroSlider() {
+  const slider = document.querySelector("[data-hero-slider]");
+  if (!slider) return;
+
+  const track = slider.querySelector("[data-hero-track]");
+  const slides = [...slider.querySelectorAll("[data-hero-slide]")];
+  const dots = [...slider.querySelectorAll("[data-hero-dot]")];
+  const status = slider.querySelector("[data-hero-status]");
+  const reducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+  let currentSlide = 0;
+  let autoplayTimer = null;
+  let pointerStartX = null;
+
+  const showSlide = (nextIndex, announce = false) => {
+    currentSlide = (nextIndex + slides.length) % slides.length;
+    track.style.transform = `translate3d(-${currentSlide * 100}%, 0, 0)`;
+    slides.forEach((slide, index) =>
+      slide.setAttribute("aria-hidden", String(index !== currentSlide)),
+    );
+    dots.forEach((dot, index) => {
+      const active = index === currentSlide;
+      dot.classList.toggle("active", active);
+      if (active) dot.setAttribute("aria-current", "true");
+      else dot.removeAttribute("aria-current");
+    });
+    if (announce && status) {
+      status.textContent = t("home.slideStatus")
+        .replace("{current}", String(currentSlide + 1))
+        .replace("{total}", String(slides.length));
+    }
+  };
+
+  const stopAutoplay = () => {
+    window.clearInterval(autoplayTimer);
+    autoplayTimer = null;
+  };
+  const startAutoplay = () => {
+    stopAutoplay();
+    if (!reducedMotion && !document.hidden) {
+      autoplayTimer = window.setInterval(
+        () => showSlide(currentSlide + 1),
+        7000,
+      );
+    }
+  };
+  const selectSlide = (index) => {
+    showSlide(index, true);
+    startAutoplay();
+  };
+
+  slider
+    .querySelector("[data-hero-previous]")
+    ?.addEventListener("click", () => selectSlide(currentSlide - 1));
+  slider
+    .querySelector("[data-hero-next]")
+    ?.addEventListener("click", () => selectSlide(currentSlide + 1));
+  dots.forEach((dot, index) =>
+    dot.addEventListener("click", () => selectSlide(index)),
+  );
+  slider.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      selectSlide(currentSlide - 1);
+    }
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      selectSlide(currentSlide + 1);
+    }
+  });
+  slider.addEventListener("pointerdown", (event) => {
+    if (event.pointerType !== "mouse") pointerStartX = event.clientX;
+  });
+  slider.addEventListener("pointerup", (event) => {
+    if (pointerStartX === null) return;
+    const distance = event.clientX - pointerStartX;
+    pointerStartX = null;
+    if (Math.abs(distance) < 48) return;
+    selectSlide(currentSlide + (distance < 0 ? 1 : -1));
+  });
+  slider.addEventListener("pointercancel", () => {
+    pointerStartX = null;
+  });
+  slider.addEventListener("mouseenter", stopAutoplay);
+  slider.addEventListener("mouseleave", startAutoplay);
+  slider.addEventListener("focusin", stopAutoplay);
+  slider.addEventListener("focusout", (event) => {
+    if (!slider.contains(event.relatedTarget)) startAutoplay();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopAutoplay();
+    else startAutoplay();
+  });
+
+  showSlide(0);
+  startAutoplay();
 }
 
 function applyContactSettings() {
@@ -706,6 +811,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         : "en";
   }
   applyTranslations();
+  initializeHeroSlider();
   await initializeContactSettings();
 
   const inquiryId = new URLSearchParams(window.location.search).get("amulet");
