@@ -72,7 +72,7 @@ window.AC168_TRANSLATIONS = {
     "inventory.copy":
       "Browse published pieces and open any listing for photographs, specifications, history, and contact options.",
     "inventory.search": "Search by name, temple, material, or ID…",
-    "inventory.headerSearch": "Search inventory",
+    "inventory.headerSearch": "Search",
     "inventory.searchSubmit": "Search the inventory",
     "inventory.allCategories": "All categories",
     "inventory.allStatuses": "All statuses",
@@ -262,7 +262,7 @@ window.AC168_TRANSLATIONS = {
     "inventory.copy":
       "ชมรายการที่เผยแพร่และเปิดดูภาพ รายละเอียด ประวัติ และช่องทางติดต่อ",
     "inventory.search": "ค้นหาชื่อ วัด วัสดุ หรือรหัส…",
-    "inventory.headerSearch": "ค้นหาพระเครื่อง",
+    "inventory.headerSearch": "Search",
     "inventory.searchSubmit": "ค้นหาในรายการพระเครื่อง",
     "inventory.allCategories": "ทุกประเภท",
     "inventory.allStatuses": "ทุกสถานะ",
@@ -444,7 +444,7 @@ window.AC168_TRANSLATIONS = {
     "inventory.title": "藏品",
     "inventory.copy": "浏览公开藏品，查看照片、规格、历史与联系方式。",
     "inventory.search": "按名称、寺庙、材质或编号搜索…",
-    "inventory.headerSearch": "搜索藏品",
+    "inventory.headerSearch": "Search",
     "inventory.searchSubmit": "搜索藏品目录",
     "inventory.allCategories": "全部类别",
     "inventory.allStatuses": "全部状态",
