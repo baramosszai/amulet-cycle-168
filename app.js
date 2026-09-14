@@ -458,7 +458,13 @@ function getPrimaryImage(amulet) {
   );
 }
 
+const STATIC_PRODUCT_PATHS = {
+  "AC168-0001": "amulets/ac168-0001/",
+};
+
 function getProductUrl(amulet) {
+  const staticPath = STATIC_PRODUCT_PATHS[amulet.inventoryId];
+  if (staticPath) return staticPath;
   return `product.html?id=${encodeURIComponent(amulet.inventoryId || "")}`;
 }
 
@@ -489,7 +495,10 @@ function setJsonLd(id, data) {
 }
 
 function absoluteProductUrl(amulet) {
-  return `https://www.amuletcycle168.com/product.html?id=${encodeURIComponent(amulet.inventoryId || "")}`;
+  return new URL(
+    getProductUrl(amulet),
+    "https://www.amuletcycle168.com/",
+  ).href;
 }
 
 function setInventoryStructuredData(amulets) {
@@ -963,7 +972,9 @@ function renderProductDetail(container, amulet) {
 async function initializeProductDetail() {
   const container = document.getElementById("product-detail");
   if (!container) return;
-  const inventoryId = new URLSearchParams(window.location.search).get("id");
+  const inventoryId =
+    new URLSearchParams(window.location.search).get("id") ||
+    container.dataset.inventoryId;
   if (!inventoryId) return renderProductDetail(container, null);
 
   container.innerHTML = `<p class="inventory-message">${escapeHtml(t("product.loading"))}</p>`;

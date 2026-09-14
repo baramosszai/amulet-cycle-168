@@ -6,7 +6,8 @@ Production-oriented, multilingual static catalogue for GitHub Pages. Inventory, 
 
 - `index.html` — brand homepage and featured inventory
 - `inventory.html` — searchable, filterable Sanity inventory
-- `product.html?id=AC168-0001` — reusable dynamic listing page
+- `amulets/ac168-0001/` — crawl-ready permanent page for the current verified item
+- `product.html?id=...` — reusable dynamic fallback for future items until a permanent page is generated
 - `story.html` — stories sourced from published inventory records
 - `about.html` — collector-house positioning and publishing principles
 - `contact.html` — equal-weight WhatsApp, WeChat, telephone, optional email/LINE, address, and inquiry tools
