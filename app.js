@@ -3,7 +3,10 @@ const SANITY_DATASET = "production";
 const SANITY_API_VERSION = "2026-08-25";
 const SANITY_BASE_URL = `https://${SANITY_PROJECT_ID}.api.sanity.io/v${SANITY_API_VERSION}/data/query/${SANITY_DATASET}`;
 
-let currentLanguage = localStorage.getItem("ac168-language") || "en";
+const queryLanguage = new URLSearchParams(window.location.search).get("lang");
+let currentLanguage = ["en", "th", "zh"].includes(queryLanguage)
+  ? queryLanguage
+  : localStorage.getItem("ac168-language") || "en";
 let loadedAmulets = [];
 let contactModalPreviousFocus = null;
 let contactModalInquiry = "";
@@ -464,6 +467,49 @@ function setMeta(selector, attribute, value) {
   if (element && value) element.setAttribute(attribute, value);
 }
 
+function setCanonical(url) {
+  let canonical = document.head.querySelector('link[rel="canonical"]');
+  if (!canonical) {
+    canonical = document.createElement("link");
+    canonical.rel = "canonical";
+    document.head.appendChild(canonical);
+  }
+  canonical.href = url;
+}
+
+function setJsonLd(id, data) {
+  let script = document.getElementById(id);
+  if (!script) {
+    script = document.createElement("script");
+    script.id = id;
+    script.type = "application/ld+json";
+    document.head.appendChild(script);
+  }
+  script.textContent = JSON.stringify(data);
+}
+
+function absoluteProductUrl(amulet) {
+  return `https://www.amuletcycle168.com/product.html?id=${encodeURIComponent(amulet.inventoryId || "")}`;
+}
+
+function setInventoryStructuredData(amulets) {
+  if (!document.getElementById("inventoryGrid") || !amulets.length) return;
+  setJsonLd("inventory-jsonld", {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Amulet Cycle 168 Thai amulet inventory",
+    url: "https://www.amuletcycle168.com/inventory.html",
+    numberOfItems: amulets.length,
+    itemListElement: amulets.map((amulet, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: absoluteProductUrl(amulet),
+      name: getLocalizedText(amulet.name) || amulet.inventoryId,
+      ...(getPrimaryImage(amulet) ? { image: getPrimaryImage(amulet) } : {}),
+    })),
+  });
+}
+
 function createProductCard(amulet) {
   const name =
     getLocalizedText(amulet.name) || amulet.inventoryId || "Untitled amulet";
@@ -573,6 +619,7 @@ async function initializeInventory() {
   try {
     loadedAmulets = await fetchAmulets();
     populateCategoryFilter(loadedAmulets);
+    setInventoryStructuredData(loadedAmulets);
     renderInventory();
   } catch (error) {
     console.error("Inventory initialization failed:", error);
@@ -754,6 +801,78 @@ function renderProductDetail(container, amulet) {
   setMeta('meta[property="og:title"]', "content", `${name} | Amulet Cycle 168`);
   setMeta('meta[property="og:description"]', "content", metaDescription);
   setMeta('meta[property="og:image"]', "content", primaryImage);
+  const canonicalUrl = absoluteProductUrl(amulet);
+  setCanonical(canonicalUrl);
+  setMeta('meta[property="og:url"]', "content", canonicalUrl);
+  setMeta('meta[property="og:image:alt"]', "content", name);
+  setMeta('meta[name="twitter:title"]', "content", `${name} | Amulet Cycle 168`);
+  setMeta('meta[name="twitter:description"]', "content", metaDescription);
+  setMeta('meta[name="twitter:image"]', "content", primaryImage);
+
+  const additionalProperty = [
+    ["Temple", temple],
+    ["Monk or master", monkMaster],
+    ["Province", province],
+    ["Year or era", amulet.year],
+    ["Material", material],
+    ["Condition", condition],
+    ["Width", amulet.widthMm != null ? `${amulet.widthMm} mm` : ""],
+    ["Height", amulet.heightMm != null ? `${amulet.heightMm} mm` : ""],
+  ]
+    .filter(([, value]) => value !== "" && value != null)
+    .map(([propertyName, value]) => ({
+      "@type": "PropertyValue",
+      propertyID: propertyName,
+      name: propertyName,
+      value: String(value),
+    }));
+  const productData = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "@id": `${canonicalUrl}#product`,
+    url: canonicalUrl,
+    name,
+    description: metaDescription,
+    sku: amulet.inventoryId,
+    ...(category ? { category } : {}),
+    ...(material ? { material } : {}),
+    ...(orderedImages.length
+      ? { image: orderedImages.map((image) => image.url).filter(Boolean) }
+      : {}),
+    brand: {
+      "@type": "Brand",
+      name: "Amulet Cycle 168",
+    },
+    additionalProperty,
+  };
+  if (typeof amulet.priceThb === "number" && amulet.priceThb > 0) {
+    const availability = {
+      available: "https://schema.org/InStock",
+      reserved: "https://schema.org/LimitedAvailability",
+      sold: "https://schema.org/SoldOut",
+    }[amulet.status];
+    productData.offers = {
+      "@type": "Offer",
+      url: canonicalUrl,
+      priceCurrency: "THB",
+      price: amulet.priceThb,
+      ...(availability ? { availability } : {}),
+    };
+  }
+  setJsonLd("product-jsonld", productData);
+  setJsonLd("breadcrumb-jsonld", {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Inventory",
+        item: "https://www.amuletcycle168.com/inventory.html",
+      },
+      { "@type": "ListItem", position: 2, name, item: canonicalUrl },
+    ],
+  });
 
   container.innerHTML = `
     <div class="product-gallery-shell">
@@ -963,7 +1082,7 @@ document
   .forEach((link) => link.addEventListener("click", openContactModal));
 document.addEventListener("DOMContentLoaded", async () => {
   const requestedLanguage = navigator.language?.toLowerCase();
-  if (!localStorage.getItem("ac168-language")) {
+  if (!queryLanguage && !localStorage.getItem("ac168-language")) {
     currentLanguage = requestedLanguage?.startsWith("th")
       ? "th"
       : requestedLanguage?.startsWith("zh")

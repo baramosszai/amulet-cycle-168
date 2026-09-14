@@ -42,6 +42,11 @@ window.AC168_TRANSLATIONS = {
     "home.trust4": "Personal support",
     "home.trust4copy":
       "Ask directly about availability, shipping, and documentation.",
+    "home.seoKicker": "THAI AMULET COLLECTING",
+    "home.seoTitle":
+      "Thai Buddhist amulets, documented for careful collectors.",
+    "home.seoCopy":
+      "Explore published pieces by monk, temple, era, material, and inventory ID. Each listing brings together high-resolution photographs, known specifications, collection context, and direct inquiry options.",
     "home.exploreKicker": "EXPLORE",
     "home.exploreTitle": "A collection built around context.",
     "home.exploreCopy":
@@ -227,6 +232,11 @@ window.AC168_TRANSLATIONS = {
     "home.trust3copy": "ตรวจสอบภาพและข้อมูลก่อนตัดสินใจ",
     "home.trust4": "ดูแลโดยตรง",
     "home.trust4copy": "สอบถามสถานะ การจัดส่ง และเอกสารได้โดยตรง",
+    "home.seoKicker": "การสะสมพระเครื่องไทย",
+    "home.seoTitle":
+      "พระเครื่องไทยพร้อมข้อมูลสำหรับนักสะสมที่พิจารณาอย่างรอบคอบ",
+    "home.seoCopy":
+      "สำรวจรายการที่เผยแพร่ตามพระเกจิ วัด ยุค วัสดุ และรหัสพระเครื่อง แต่ละรายการรวบรวมภาพความละเอียดสูง รายละเอียดที่ทราบ บริบทของของสะสม และช่องทางสอบถามโดยตรง",
     "home.exploreKicker": "สำรวจ",
     "home.exploreTitle": "ของสะสมที่มีเรื่องราวและบริบท",
     "home.exploreCopy":
@@ -407,6 +417,10 @@ window.AC168_TRANSLATIONS = {
     "home.trust3copy": "决定前可查看照片与资料。",
     "home.trust4": "专人协助",
     "home.trust4copy": "直接咨询状态、配送与文件。",
+    "home.seoKicker": "泰国佛牌收藏",
+    "home.seoTitle": "为谨慎收藏者整理的泰国佛牌资料",
+    "home.seoCopy":
+      "按高僧、寺庙、年代、材质与藏品编号浏览公开藏品。每件藏品均汇集高清图片、已知规格、收藏背景与直接咨询方式。",
     "home.exploreKicker": "探索",
     "home.exploreTitle": "以背景资料为核心的收藏。",
     "home.exploreCopy": "通过实物细节、历史与现有文件了解每一件藏品。",
