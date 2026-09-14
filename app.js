@@ -98,6 +98,28 @@ function applyTranslations() {
   });
 }
 
+function initializeHeaderSearch() {
+  document.querySelectorAll(".nav").forEach((nav) => {
+    if (nav.querySelector(".header-search")) return;
+    const inquiryLink = nav.querySelector('a[href^="contact.html"]');
+    if (!inquiryLink) return;
+
+    const form = document.createElement("form");
+    form.className = "header-search";
+    form.action = "inventory.html";
+    form.method = "get";
+    form.setAttribute("role", "search");
+    form.innerHTML = `
+      <label class="sr-only" for="header-inventory-search">${escapeHtml(t("inventory.headerSearch"))}</label>
+      <input id="header-inventory-search" type="search" name="q" data-i18n-placeholder="inventory.headerSearch" placeholder="${escapeHtml(t("inventory.headerSearch"))}" autocomplete="off">
+      <button type="submit" data-i18n-aria-label="inventory.searchSubmit" aria-label="${escapeHtml(t("inventory.searchSubmit"))}"><span aria-hidden="true">⌕</span></button>`;
+
+    const requestedSearch = new URLSearchParams(window.location.search).get("q");
+    if (requestedSearch) form.querySelector("input").value = requestedSearch;
+    inquiryLink.before(form);
+  });
+}
+
 function initializeHeroSlider() {
   const slider = document.querySelector("[data-hero-slider]");
   if (!slider) return;
@@ -582,6 +604,8 @@ function renderInventory() {
       amulet.inventoryId,
       getLocalizedText(amulet.name),
       getLocalizedText(amulet.temple),
+      getLocalizedText(amulet.monkMaster),
+      getLocalizedText(amulet.province),
       itemCategory,
       getLocalizedText(amulet.material),
       amulet.year,
@@ -623,6 +647,9 @@ function populateCategoryFilter(amulets) {
 async function initializeInventory() {
   const grid = document.getElementById("inventoryGrid");
   if (!grid) return;
+  const requestedSearch = new URLSearchParams(window.location.search).get("q");
+  const searchInput = document.getElementById("inventory-search");
+  if (requestedSearch && searchInput) searchInput.value = requestedSearch;
   grid.innerHTML = `<p class="inventory-message">${escapeHtml(t("inventory.loading"))}</p>`;
 
   try {
@@ -1089,7 +1116,7 @@ document
     ),
   );
 document
-  .querySelectorAll('.nav a[href="contact.html"]')
+  .querySelectorAll('.nav a[href^="contact.html"]')
   .forEach((link) => link.addEventListener("click", openContactModal));
 document.addEventListener("DOMContentLoaded", async () => {
   const requestedLanguage = navigator.language?.toLowerCase();
@@ -1100,6 +1127,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         ? "zh"
         : "en";
   }
+  initializeHeaderSearch();
   applyTranslations();
   initializeHeroSlider();
   await initializeContactSettings();

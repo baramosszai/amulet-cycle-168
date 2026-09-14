@@ -389,46 +389,6 @@ h3 {
   text-align: left;
   max-width: none;
 }
-.seo-intro {
-  display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-  gap: clamp(35px, 7vw, 100px);
-  align-items: start;
-  border-bottom: 1px solid #31291f;
-}
-.seo-intro h2 {
-  max-width: 590px;
-  margin: 0;
-  font-size: clamp(36px, 4vw, 56px);
-  line-height: 1.02;
-  font-weight: 500;
-}
-.seo-intro-copy > p {
-  margin: 27px 0 28px;
-  max-width: 650px;
-  color: #c2bdb4;
-  font-size: 15px;
-  line-height: 1.8;
-}
-.seo-language-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.seo-language-links a {
-  border: 1px solid #4b3b27;
-  padding: 9px 14px;
-  color: var(--gold2);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  transition: 0.2s ease;
-}
-.seo-language-links a:hover,
-.seo-language-links a:focus-visible {
-  color: #0b0e0f;
-  background: var(--gold2);
-  border-color: var(--gold2);
-}
 .seo-landing-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -857,7 +817,6 @@ h3 {
   font-size: 11px;
 }
 @media (max-width: 900px) {
-  .seo-intro,
   .seo-landing-grid {
     grid-template-columns: 1fr;
   }
@@ -1428,8 +1387,54 @@ h3 {
 }
 .nav {
   gap: 24px;
+  align-items: center;
 }
-.nav a[href="contact.html"] {
+.header-search {
+  width: clamp(145px, 12vw, 205px);
+  height: 42px;
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #4d402f;
+  background: rgba(17, 21, 21, 0.92);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+.header-search:focus-within {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(201, 154, 69, 0.12);
+}
+.header-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  padding: 0 5px 0 12px;
+  background: transparent;
+  color: var(--cream);
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+.header-search input::placeholder {
+  color: #8f8b82;
+  opacity: 1;
+}
+.header-search button {
+  width: 38px;
+  flex: 0 0 38px;
+  border: 0;
+  border-left: 1px solid #3c3328;
+  background: transparent;
+  color: var(--gold2);
+  cursor: pointer;
+  font-size: 19px;
+  line-height: 1;
+}
+.header-search button:hover,
+.header-search button:focus-visible {
+  background: rgba(201, 154, 69, 0.12);
+  color: #f0cf87;
+}
+.nav a[href^="contact.html"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1456,7 +1461,7 @@ h3 {
     box-shadow 180ms ease;
   animation: inquiry-halo 4.8s ease-in-out infinite;
 }
-.nav a[href="contact.html"]::before {
+.nav a[href^="contact.html"]::before {
   content: "\2192";
   display: grid;
   order: 2;
@@ -1469,12 +1474,12 @@ h3 {
   line-height: 1;
   transition: transform 180ms ease;
 }
-.nav a[href="contact.html"].active::after {
+.nav a[href^="contact.html"].active::after {
   display: none;
 }
-.nav a[href="contact.html"]:hover,
-.nav a[href="contact.html"]:focus-visible,
-.nav a[href="contact.html"].active {
+.nav a[href^="contact.html"]:hover,
+.nav a[href^="contact.html"]:focus-visible,
+.nav a[href^="contact.html"].active {
   border-color: #f0cf87;
   color: #0f0c07;
   background:
@@ -1487,15 +1492,15 @@ h3 {
   transform: translateY(-2px);
   animation-play-state: paused;
 }
-.nav a[href="contact.html"]:hover::before,
-.nav a[href="contact.html"]:focus-visible::before {
+.nav a[href^="contact.html"]:hover::before,
+.nav a[href^="contact.html"]:focus-visible::before {
   transform: translateX(3px);
 }
-.nav a[href="contact.html"]:focus-visible {
+.nav a[href^="contact.html"]:focus-visible {
   outline: 2px solid var(--cream);
   outline-offset: 3px;
 }
-.nav a[href="contact.html"]:active {
+.nav a[href^="contact.html"]:active {
   transform: translateY(0);
 }
 @keyframes inquiry-halo {
@@ -1673,6 +1678,9 @@ h3 {
   .nav a {
     font-size: 11px;
   }
+  .header-search {
+    width: 138px;
+  }
   .language-selector button,
   .language-selector a {
     padding: 7px 5px;
@@ -1703,11 +1711,15 @@ h3 {
   .nav a {
     padding: 12px 0;
   }
-  .nav a[href="contact.html"] {
+  .nav a[href^="contact.html"] {
     width: min(100%, 240px);
     justify-content: space-between;
     margin: 8px 0 4px;
     padding: 12px 16px;
+  }
+  .header-search {
+    width: min(100%, 320px);
+    margin: 8px 0;
   }
   .menu-toggle {
     display: block;
@@ -1739,7 +1751,7 @@ h3 {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .nav a[href="contact.html"] {
+  .nav a[href^="contact.html"] {
     animation: none;
     transition: none;
   }
