@@ -95,9 +95,19 @@ textarea {
   line-height: 1;
 }
 .brand small {
+  display: flex;
+  align-items: baseline;
+  gap: 0.34em;
   font-size: 15px;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   margin-top: 2px;
+}
+.brand-number {
+  font-size: 0.96em;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  font-variant-numeric: lining-nums proportional-nums;
+  font-feature-settings: "lnum" 1, "pnum" 1;
 }
 .nav {
   margin-left: auto;
