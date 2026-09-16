@@ -2050,6 +2050,24 @@ html[lang="zh-CN"] .text-link {
   font-size: 13px;
   overflow-wrap: anywhere;
 }
+.contact-modal-channel--line {
+  grid-row: span 2;
+}
+.contact-line-qr {
+  display: block;
+  width: min(150px, 100%);
+  height: auto;
+  margin: 15px auto 8px;
+  padding: 7px;
+  border: 1px solid #655136;
+  background: #fff;
+}
+.contact-modal-channel small {
+  display: block;
+  color: #9f9586;
+  font-size: 11px;
+  line-height: 1.4;
+}
 .contact-modal-address {
   margin-top: 18px;
   padding-top: 18px;
@@ -2091,6 +2109,9 @@ html[lang="zh-CN"] .text-link {
   .contact-form-actions,
   .contact-modal-channels {
     grid-template-columns: 1fr;
+  }
+  .contact-modal-channel--line {
+    grid-row: auto;
   }
   .footer-contact-channels a {
     align-items: flex-start;

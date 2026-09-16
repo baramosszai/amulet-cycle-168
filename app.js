@@ -10,14 +10,21 @@ let currentLanguage = ["en", "th", "zh"].includes(queryLanguage)
 let loadedAmulets = [];
 let contactModalPreviousFocus = null;
 let contactModalInquiry = "";
-let currentContacts = {
+const VERIFIED_CONTACTS = Object.freeze({
   whatsappNumber: "66649322036",
   whatsappDisplay: "+66 64 932 2036",
-  wechatId: "panupong_m",
+  wechatId: "amulet_cycle168",
   telephoneNumber: "66816271218",
   telephoneDisplay: "+66 81 627 1218",
-  email: "",
-  lineId: "",
+  secondaryTelephoneNumber: "66649322036",
+  secondaryTelephoneDisplay: "+66 64 932 2036",
+  email: "amuletcycle168@gmail.com",
+  lineId: "@740uwvsw",
+  lineQr: "/assets/line-qr-740uwvsw.png",
+});
+
+let currentContacts = {
+  ...VERIFIED_CONTACTS,
   address: {
     en: "33 Ratchaphruek Road\nBang Kho, Chom Thong\nBangkok 10150, Thailand",
     th: "33 ถนนราชพฤกษ์\nแขวงบางค้อ เขตจอมทอง\nกรุงเทพฯ 10150 ประเทศไทย",
@@ -222,6 +229,7 @@ function initializeHeroSlider() {
 function applyContactSettings() {
   const whatsappUrl = `https://wa.me/${currentContacts.whatsappNumber}`;
   const phoneUrl = `tel:+${currentContacts.telephoneNumber}`;
+  const secondaryPhoneUrl = `tel:+${currentContacts.secondaryTelephoneNumber}`;
   document.querySelectorAll('[data-contact="whatsapp"]').forEach((element) => {
     element.href = whatsappUrl;
     const value = element.querySelector("[data-contact-value]");
@@ -236,6 +244,23 @@ function applyContactSettings() {
     const value = element.querySelector("[data-contact-value]");
     if (value) value.textContent = currentContacts.telephoneDisplay;
   });
+  document
+    .querySelectorAll('[data-contact="telephone-secondary"]')
+    .forEach((element) => {
+      element.href = secondaryPhoneUrl;
+      const value = element.querySelector("[data-contact-value]");
+      if (value) value.textContent = currentContacts.secondaryTelephoneDisplay;
+    });
+  document.querySelectorAll('[data-contact="email"]').forEach((element) => {
+    element.href = `mailto:${currentContacts.email}`;
+    const value = element.querySelector("[data-contact-value]");
+    if (value) value.textContent = currentContacts.email;
+  });
+  document.querySelectorAll('[data-contact="line"]').forEach((element) => {
+    element.href = `https://line.me/ti/p/~${encodeURIComponent(currentContacts.lineId)}`;
+    const value = element.querySelector("[data-contact-value]");
+    if (value) value.textContent = currentContacts.lineId;
+  });
   document.querySelectorAll('[data-contact="address"]').forEach((element) => {
     element.textContent = getLocalizedText(currentContacts.address);
   });
@@ -245,18 +270,13 @@ function applyContactSettings() {
       .forEach((element) => element.remove());
     [
       currentContacts.email
-        ? {
-            label: t("contact.email"),
-            value: currentContacts.email,
-            href: `mailto:${currentContacts.email}`,
-          }
+        ? { label: t("contact.email"), value: currentContacts.email, href: `mailto:${currentContacts.email}` }
         : null,
       currentContacts.lineId
-        ? {
-            label: t("contact.line"),
-            value: currentContacts.lineId,
-            href: `https://line.me/ti/p/~${encodeURIComponent(currentContacts.lineId)}`,
-          }
+        ? { label: t("contact.line"), value: currentContacts.lineId, href: `https://line.me/ti/p/~${encodeURIComponent(currentContacts.lineId)}` }
+        : null,
+      currentContacts.secondaryTelephoneNumber
+        ? { label: t("contact.telephoneSecondary"), value: currentContacts.secondaryTelephoneDisplay, href: secondaryPhoneUrl }
         : null,
     ]
       .filter(Boolean)
@@ -291,10 +311,16 @@ function renderContactModal() {
     : "";
   const channels = [
     {
-      label: t("contact.whatsapp"),
-      value: currentContacts.whatsappDisplay,
-      href: whatsappUrl,
+      label: t("contact.email"),
+      value: currentContacts.email,
+      href: emailUrl,
+    },
+    {
+      label: t("contact.line"),
+      value: currentContacts.lineId,
+      href: `https://line.me/ti/p/~${encodeURIComponent(currentContacts.lineId)}`,
       external: true,
+      qr: currentContacts.lineQr,
     },
     {
       label: t("contact.wechat"),
@@ -302,25 +328,21 @@ function renderContactModal() {
       action: "wechat",
     },
     {
-      label: t("contact.telephone"),
+      label: t("contact.whatsapp"),
+      value: currentContacts.whatsappDisplay,
+      href: whatsappUrl,
+      external: true,
+    },
+    {
+      label: t("contact.telephonePrimary"),
       value: currentContacts.telephoneDisplay,
       href: `tel:+${currentContacts.telephoneNumber}`,
     },
-    currentContacts.email
-      ? {
-          label: t("contact.email"),
-          value: currentContacts.email,
-          href: emailUrl,
-        }
-      : null,
-    currentContacts.lineId
-      ? {
-          label: t("contact.line"),
-          value: currentContacts.lineId,
-          href: `https://line.me/ti/p/~${encodeURIComponent(currentContacts.lineId)}`,
-          external: true,
-        }
-      : null,
+    {
+      label: t("contact.telephoneSecondary"),
+      value: currentContacts.secondaryTelephoneDisplay,
+      href: `tel:+${currentContacts.secondaryTelephoneNumber}`,
+    },
   ].filter(Boolean);
 
   modal.querySelector(".contact-modal-title").textContent =
@@ -339,7 +361,7 @@ function renderContactModal() {
     .map((channel) =>
       channel.action === "wechat"
         ? `<button class="contact-modal-channel" type="button" data-modal-wechat><strong>${escapeHtml(channel.label)}</strong><span>${escapeHtml(channel.value)}</span></button>`
-        : `<a class="contact-modal-channel" href="${escapeHtml(channel.href)}"${channel.external ? ' target="_blank" rel="noopener"' : ""}><strong>${escapeHtml(channel.label)}</strong><span>${escapeHtml(channel.value)}</span></a>`,
+        : `<a class="contact-modal-channel${channel.qr ? " contact-modal-channel--line" : ""}" href="${escapeHtml(channel.href)}"${channel.external ? ' target="_blank" rel="noopener"' : ""}><strong>${escapeHtml(channel.label)}</strong><span>${escapeHtml(channel.value)}</span>${channel.qr ? `<img class="contact-line-qr" src="${escapeHtml(channel.qr)}" alt="${escapeHtml(t("contact.lineQrAlt"))}" width="180" height="180"><small>${escapeHtml(t("contact.lineQrHint"))}</small>` : ""}</a>`,
     )
     .join("");
   modal
@@ -423,8 +445,8 @@ async function initializeContactSettings() {
     if (settings)
       currentContacts = {
         ...currentContacts,
-        ...settings,
         address: settings.address || currentContacts.address,
+        ...VERIFIED_CONTACTS,
       };
   } catch (error) {
     console.error("Contact settings failed:", error);
