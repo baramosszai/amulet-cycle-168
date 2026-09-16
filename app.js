@@ -264,34 +264,6 @@ function applyContactSettings() {
   document.querySelectorAll('[data-contact="address"]').forEach((element) => {
     element.textContent = getLocalizedText(currentContacts.address);
   });
-  document.querySelectorAll("[data-contact-grid]").forEach((grid) => {
-    grid
-      .querySelectorAll(".optional-contact")
-      .forEach((element) => element.remove());
-    [
-      currentContacts.email
-        ? { label: t("contact.email"), value: currentContacts.email, href: `mailto:${currentContacts.email}` }
-        : null,
-      currentContacts.lineId
-        ? { label: t("contact.line"), value: currentContacts.lineId, href: `https://line.me/ti/p/~${encodeURIComponent(currentContacts.lineId)}` }
-        : null,
-      currentContacts.secondaryTelephoneNumber
-        ? { label: t("contact.telephoneSecondary"), value: currentContacts.secondaryTelephoneDisplay, href: secondaryPhoneUrl }
-        : null,
-    ]
-      .filter(Boolean)
-      .forEach((channel) => {
-        const link = document.createElement("a");
-        link.className = "contact-channel-card optional-contact";
-        link.href = channel.href;
-        const label = document.createElement("strong");
-        label.textContent = channel.label;
-        const value = document.createElement("span");
-        value.textContent = channel.value;
-        link.append(label, value);
-        grid.append(link);
-      });
-  });
   if (document.getElementById("contact-modal")) renderContactModal();
 }
 
@@ -334,14 +306,17 @@ function renderContactModal() {
       external: true,
     },
     {
-      label: t("contact.telephonePrimary"),
-      value: currentContacts.telephoneDisplay,
-      href: `tel:+${currentContacts.telephoneNumber}`,
-    },
-    {
-      label: t("contact.telephoneSecondary"),
-      value: currentContacts.secondaryTelephoneDisplay,
-      href: `tel:+${currentContacts.secondaryTelephoneNumber}`,
+      label: t("contact.telephone"),
+      phones: [
+        {
+          value: currentContacts.telephoneDisplay,
+          href: `tel:+${currentContacts.telephoneNumber}`,
+        },
+        {
+          value: currentContacts.secondaryTelephoneDisplay,
+          href: `tel:+${currentContacts.secondaryTelephoneNumber}`,
+        },
+      ],
     },
   ].filter(Boolean);
 
@@ -359,7 +334,9 @@ function renderContactModal() {
     getLocalizedText(currentContacts.address);
   modal.querySelector(".contact-modal-channels").innerHTML = channels
     .map((channel) =>
-      channel.action === "wechat"
+      channel.phones
+        ? `<div class="contact-modal-channel contact-modal-channel--tel"><strong>${escapeHtml(channel.label)}</strong><span class="contact-telephone-links">${channel.phones.map((phone) => `<a href="${escapeHtml(phone.href)}">${escapeHtml(phone.value)}</a>`).join('<span aria-hidden="true">·</span>')}</span></div>`
+        : channel.action === "wechat"
         ? `<button class="contact-modal-channel" type="button" data-modal-wechat><strong>${escapeHtml(channel.label)}</strong><span>${escapeHtml(channel.value)}</span></button>`
         : `<a class="contact-modal-channel${channel.qr ? " contact-modal-channel--line" : ""}" href="${escapeHtml(channel.href)}"${channel.external ? ' target="_blank" rel="noopener"' : ""}><strong>${escapeHtml(channel.label)}</strong><span>${escapeHtml(channel.value)}</span>${channel.qr ? `<img class="contact-line-qr" src="${escapeHtml(channel.qr)}" alt="${escapeHtml(t("contact.lineQrAlt"))}" width="180" height="180"><small>${escapeHtml(t("contact.lineQrHint"))}</small>` : ""}</a>`,
     )

@@ -1933,6 +1933,20 @@ html[lang="zh-CN"] .text-link {
   font-size: 13px;
   overflow-wrap: anywhere;
 }
+.contact-telephone-links {
+  display: flex !important;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px 8px;
+}
+.contact-telephone-links a {
+  color: #d6cbb8;
+  white-space: nowrap;
+}
+.contact-telephone-links a:hover,
+.contact-telephone-links a:focus-visible {
+  color: var(--gold2);
+}
 .contact-address {
   padding: 20px;
   border: 1px solid #3b3329;
@@ -2092,7 +2106,8 @@ html[lang="zh-CN"] .text-link {
   padding-right: 12px;
   text-align: center;
 }
-.footer-contact-channels a {
+.footer-contact-channels > a,
+.footer-contact-row {
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -2100,9 +2115,17 @@ html[lang="zh-CN"] .text-link {
   padding: 7px 0;
   margin: 0;
 }
-.footer-contact-channels span:last-child {
+.footer-contact-channels > a > span:last-child,
+.footer-contact-row > span:last-child {
   color: #d6cbb8;
   text-align: right;
+}
+.footer-contact-row .contact-telephone-links {
+  justify-content: flex-end;
+}
+.footer-contact-row .contact-telephone-links a {
+  padding: 0;
+  border: 0;
 }
 @media (max-width: 650px) {
   .contact-channel-grid,
@@ -2113,7 +2136,8 @@ html[lang="zh-CN"] .text-link {
   .contact-modal-channel--line {
     grid-row: auto;
   }
-  .footer-contact-channels a {
+  .footer-contact-channels > a,
+  .footer-contact-row {
     align-items: flex-start;
   }
 }
