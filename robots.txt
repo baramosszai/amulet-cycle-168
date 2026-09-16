@@ -11,6 +11,12 @@ Allow: /
 User-agent: Baiduspider
 Allow: /
 
+User-agent: YandexBot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
 User-agent: OAI-SearchBot
 Allow: /
 
@@ -30,6 +36,15 @@ User-agent: ClaudeBot
 Allow: /
 
 User-agent: GPTBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: Amazonbot
 Allow: /
 
 User-agent: *

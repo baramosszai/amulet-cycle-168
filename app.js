@@ -482,6 +482,11 @@ function getPrimaryImage(amulet) {
 
 const STATIC_PRODUCT_PATHS = {
   "AC168-0001": "amulets/ac168-0001/",
+  "AC168-0002": "amulets/ac168-0002/",
+  "AC168-0003": "amulets/ac168-0003/",
+  "AC168-0004": "amulets/ac168-0004/",
+  "AC168-0005": "amulets/ac168-0005/",
+  "AC168-0006": "amulets/ac168-0006/",
 };
 
 function getProductUrl(amulet) {
@@ -862,12 +867,18 @@ function renderProductDetail(container, amulet) {
       name: propertyName,
       value: String(value),
     }));
+  const alternateNames =
+    amulet.name && typeof amulet.name === "object"
+      ? [...new Set(Object.values(amulet.name).map((value) => String(value || "").trim()))]
+          .filter((value) => value && value !== name)
+      : [];
   const productData = {
     "@context": "https://schema.org",
     "@type": "Product",
     "@id": `${canonicalUrl}#product`,
     url: canonicalUrl,
     name,
+    ...(alternateNames.length ? { alternateName: alternateNames } : {}),
     description: metaDescription,
     sku: amulet.inventoryId,
     ...(category ? { category } : {}),
