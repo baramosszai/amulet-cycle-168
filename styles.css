@@ -1918,8 +1918,8 @@ html[lang="zh-CN"] .text-link {
   border-color: var(--gold);
   transform: translateY(-2px);
 }
-.contact-channel-card strong,
-.contact-channel-card span {
+.contact-channel-card > strong,
+.contact-channel-card > span {
   display: block;
 }
 .contact-channel-card strong {
@@ -1927,7 +1927,7 @@ html[lang="zh-CN"] .text-link {
   font-family: "Cormorant Garamond", serif;
   font-size: 19px;
 }
-.contact-channel-card span {
+.contact-channel-card > span {
   margin-top: 5px;
   color: #d6cbb8;
   font-size: 13px;
@@ -2049,8 +2049,8 @@ html[lang="zh-CN"] .text-link {
   border-color: var(--gold);
   transform: translateY(-2px);
 }
-.contact-modal-channel strong,
-.contact-modal-channel span {
+.contact-modal-channel > strong,
+.contact-modal-channel > span {
   display: block;
 }
 .contact-modal-channel strong {
@@ -2058,7 +2058,7 @@ html[lang="zh-CN"] .text-link {
   font-family: "Cormorant Garamond", serif;
   font-size: 19px;
 }
-.contact-modal-channel span {
+.contact-modal-channel > span {
   margin-top: 5px;
   color: #d6cbb8;
   font-size: 13px;
@@ -2109,11 +2109,15 @@ html[lang="zh-CN"] .text-link {
 .footer-contact-channels > a,
 .footer-contact-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   border-bottom: 1px solid #2f2b25;
   padding: 7px 0;
   margin: 0;
+  color: #9f9d97;
+  font-size: 12px;
+  line-height: 1.45;
 }
 .footer-contact-channels > a > span:last-child,
 .footer-contact-row > span:last-child {
@@ -2121,11 +2125,24 @@ html[lang="zh-CN"] .text-link {
   text-align: right;
 }
 .footer-contact-row .contact-telephone-links {
+  align-items: center;
   justify-content: flex-end;
+  gap: 8px;
+  margin: 0;
+  color: #d6cbb8;
+  font-size: 12px;
 }
 .footer-contact-row .contact-telephone-links a {
+  display: inline;
   padding: 0;
   border: 0;
+  margin: 0;
+  color: #d6cbb8;
+  font-size: 12px;
+  line-height: inherit;
+}
+.footer-contact-row .contact-telephone-links > span {
+  color: #746858;
 }
 @media (max-width: 650px) {
   .contact-channel-grid,
