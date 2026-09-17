@@ -1797,12 +1797,48 @@ h3 {
   }
   .hero {
     min-height: 600px;
+    align-items: flex-start;
   }
   .hero h1 {
     font-size: 44px;
   }
   .hero-slide img {
     object-position: 67% center;
+  }
+  .hero-slide--brand {
+    background:
+      radial-gradient(
+        circle at 50% 18%,
+        rgba(181, 126, 44, 0.14),
+        transparent 42%
+      ),
+      #070909;
+  }
+  .hero-slide--brand img {
+    width: 100%;
+    height: 300px;
+    margin-left: 0;
+    object-fit: contain;
+    object-position: center top;
+    opacity: 0.9;
+    transform: scale(0.92);
+    transform-origin: center top;
+  }
+  .hero.hero--brand-active {
+    min-height: 900px;
+  }
+  .hero--brand-active .hero-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(5, 7, 7, 0.12) 0%,
+      rgba(5, 7, 7, 0.48) 25%,
+      rgba(5, 7, 7, 0.92) 42%,
+      rgba(5, 7, 7, 0.96) 100%
+    );
+  }
+  .hero--brand-active .hero-content {
+    padding-top: 300px;
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.9);
   }
   .hero-overlay {
     background: linear-gradient(

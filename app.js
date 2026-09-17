@@ -144,6 +144,10 @@ function initializeHeroSlider() {
 
   const showSlide = (nextIndex, announce = false) => {
     currentSlide = (nextIndex + slides.length) % slides.length;
+    slider.classList.toggle(
+      "hero--brand-active",
+      slides[currentSlide].classList.contains("hero-slide--brand"),
+    );
     track.style.transform = `translate3d(-${currentSlide * 100}%, 0, 0)`;
     slides.forEach((slide, index) =>
       slide.setAttribute("aria-hidden", String(index !== currentSlide)),
